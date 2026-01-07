@@ -29,23 +29,21 @@
 
 **Expected Result**: Different Canvas hash, UserAgent, Screen Resolution, etc.
 
-### Test 2: Burner Email Generation
-1. Visit: https://www.reddit.com/ (or any site requiring email)
-2. Click **"Sign Up"**
-3. Focus on the email input field
-4. **A purple ghost icon should appear** at the right edge
-5. Click the ghost icon
-6. **Email is auto-filled!**
-
-**Expected Result**: A random email like `ghost_xyz123@1secmail.com`
+### Test 2: Burner Email & Persistence
+1. Visit: https://www.reddit.com/ (or any site with email fields)
+2. **A purple ghost icon should appear** in the email input field.
+3. Click it → Email is auto-filled!
+4. **Click the GhostLayer extension icon**.
+5. ✅ **Expect:** The same email address is displayed.
+6. **Close and re-open the popup**. 
+7. ✅ **Expect:** The email address persists! (Session persistence fix).
 
 ### Test 3: Check Email Inbox
-1. After generating an email, **click the GhostLayer icon**
-2. Click **"Check Inbox"**
-3. You should see "No messages yet" or any incoming emails
-4. Complete a sign-up to test receiving emails
-
-**Expected Result**: Real-time inbox with messages
+1. With an email displayed, click **"Check Inbox"**.
+2. ✅ **Expect:** "No messages yet. Waiting for email..." state appears.
+3. Keep popup open. Notice the **"(Last check: HH:MM)"** in the header.
+4. Send a test email to the burner address.
+5. ✅ **Expect:** Message appears in 5-10s. Click to read!
 
 ### Test 4: Stats Dashboard
 1. Click the **GhostLayer icon**

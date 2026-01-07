@@ -366,10 +366,22 @@ body {
   color: var(--neon-green);
   font-family: 'Courier New', monospace;
   word-break: break-all;
-  margin-bottom: 12px;
+  margin-bottom: 4px; /* Reduced margin to make room for tag */
   padding: 8px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
+}
+
+.provider-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--cyber-violet-light);
+  opacity: 0.6;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 12px;
+  text-align: right;
 }
 
 .inbox-btn {
@@ -464,22 +476,44 @@ body {
   transform: translateX(4px);
 }
 
+.message-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
 .message-from {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--gray-200);
-  margin-bottom: 4px;
+  color: var(--cyber-violet-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.message-time {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-weight: 500;
 }
 
 .message-subject {
   font-size: 13px;
-  color: var(--gray-300);
-  margin-bottom: 4px;
+  color: var(--gray-200);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .message-date {
   font-size: 11px;
   color: var(--gray-500);
+  margin-top: 4px;
 }
 
 .empty-state {

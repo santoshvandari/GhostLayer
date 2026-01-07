@@ -5,20 +5,22 @@
 (function() {
   'use strict';
   
-  // Get spoofing profile from the current script's dataset to avoid CSP issues
-  const currentScript = document.currentScript;
+  // Get spoofing profile from the document attribute to avoid CSP issues with script tags
   let PROFILE = null;
+  const profileData = document.documentElement.getAttribute('data-ghostlayer-profile');
   
-  if (currentScript && currentScript.dataset.profile) {
+  if (profileData) {
     try {
-      PROFILE = JSON.parse(currentScript.dataset.profile);
+      PROFILE = JSON.parse(profileData);
+      // Clean up the attribute to stay stealthy
+      document.documentElement.removeAttribute('data-ghostlayer-profile');
     } catch (e) {
-      console.error('[GhostLayer] Failed to parse profile data');
+      console.error('[GhostLayer] Failed to parse profile data from bridge');
     }
   }
   
   if (!PROFILE) {
-    // Fallback to global if dataset fails
+    // Fallback to legacy global if bridge fails
     PROFILE = window.__GHOSTLAYER_PROFILE__;
   }
   

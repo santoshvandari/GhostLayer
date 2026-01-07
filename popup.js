@@ -88,17 +88,73 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       
+      // If no current email is selected, try to load it from storage or default to history
+      if (!currentEmail) {
+        const stored = await chrome.storage.local.get(['activeEmail']);
+        if (stored.activeEmail) {
+          currentEmail = stored.activeEmail;
+        } else if (history.length > 0) {
+          currentEmail = history[0];
+        }
+        
+        if (currentEmail) {
+          emailValue.textContent = currentEmail.email;
+          
+          // Update provider tag
+          const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
+          providerTag.className = 'provider-tag';
+          providerTag.textContent = currentEmail.provider || '1secmail';
+          if (!document.querySelector('.provider-tag')) {
+             emailValue.parentNode.appendChild(providerTag);
+          }
+          
+          emailDisplay.classList.remove('hidden');
+        }
+      }
+      
       emailHistory.innerHTML = history.slice(0, 5).map(item => {
         const date = new Date(item.createdAt);
         const timeAgo = getTimeAgo(date);
         
         return `
-          <div class="history-item">
+          <div class="history-item" data-email="${item.email}" data-username="${item.username}" data-domain="${item.domain}">
             <div class="history-email">${item.email}</div>
             <div class="history-date">${timeAgo}</div>
           </div>
         `;
       }).join('');
+
+      // Add click handlers to history items to switch active email
+      document.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', async () => {
+          const email = item.dataset.email;
+          const selected = history.find(h => h.email === email);
+          if (selected) {
+            currentEmail = selected;
+            
+            // Save as active email
+            await chrome.storage.local.set({ activeEmail: currentEmail });
+            
+            emailValue.textContent = currentEmail.email;
+            
+            // Update provider tag
+            const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
+            providerTag.className = 'provider-tag';
+            providerTag.textContent = currentEmail.provider || '1secmail';
+            if (!document.querySelector('.provider-tag')) {
+               emailValue.parentNode.appendChild(providerTag);
+            }
+
+            emailDisplay.classList.remove('hidden');
+            inboxDisplay.classList.add('hidden');
+            if (checkInboxInterval) {
+              clearInterval(checkInboxInterval);
+              checkInboxInterval = null;
+            }
+            console.log('[GhostLayer] Switched email to:', currentEmail.email);
+          }
+        });
+      });
     } catch (error) {
       console.error('[GhostLayer] Failed to load email history:', error);
     }
@@ -134,15 +190,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const response = await chrome.runtime.sendMessage({ action: 'generateEmail' });
       
       if (response && response.success) {
-        currentEmail = {
-          email: response.email,
-          username: response.username,
-          domain: response.domain
-        };
+        currentEmail = response;
+        
+        // Save as active email
+        await chrome.storage.local.set({ activeEmail: currentEmail });
         
         emailValue.textContent = response.email;
         emailDisplay.classList.remove('hidden');
         inboxDisplay.classList.add('hidden');
+        
+        // Update provider tag
+        const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
+        providerTag.className = 'provider-tag';
+        providerTag.textContent = response.provider;
+        if (!document.querySelector('.provider-tag')) {
+           emailValue.parentNode.appendChild(providerTag);
+        }
         
         // Update stats and history
         await loadStats();
@@ -248,46 +311,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       const response = await chrome.runtime.sendMessage({
         action: 'checkInbox',
-        username: currentEmail.username,
-        domain: currentEmail.domain
+        emailData: currentEmail
       });
       
       if (response && response.success) {
         displayMessages(response.messages);
         inboxDisplay.classList.remove('hidden');
         
-        // Start auto-refresh
+        // Show last updated time
+        const now = new Date();
+        const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+        document.querySelector('.inbox-header span').innerHTML = `Inbox <small style="opacity: 0.6; font-size: 10px; margin-left: 8px;">(Refreshed: ${timeStr})</small>`;
+        
+        // Manual Refresh only to avoid 403 blocks
         if (checkInboxInterval) {
           clearInterval(checkInboxInterval);
+          checkInboxInterval = null;
         }
-        checkInboxInterval = setInterval(() => {
-          checkInbox(currentEmail.username, currentEmail.domain);
-        }, 5000);
       }
       
       checkInboxBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
         </svg>
-        Check Inbox
+        Refresh Inbox
       `;
     } catch (error) {
       console.error('[GhostLayer] Inbox check failed:', error);
+      
+      const isThrottle = error.message.includes('Cooling down');
+      const is403 = error.message.includes('403');
+      
+      let displayMsg = isThrottle ? error.message : 'Rate limited by server.';
+      if (is403) displayMsg = 'Server busy. Try new email.';
+      
+      document.querySelector('.inbox-header span').innerHTML = `<span style="color: #ef4444; font-size: 10px;">${displayMsg}</span>`;
+      
       checkInboxBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
         </svg>
-        Check Inbox
+        ${isThrottle ? 'Wait...' : (is403 ? 'Server Blocked' : 'Try Again')}
       `;
+      
+      if (isThrottle) {
+        checkInboxBtn.disabled = true;
+        setTimeout(() => {
+          checkInboxBtn.disabled = false;
+          checkInboxBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+            Refresh Inbox
+          `;
+        }, 3000); // Shorter visual lock
+      }
     }
   });
   
-  async function checkInbox(username, domain) {
+  async function checkInbox(emailData) {
     try {
       const response = await chrome.runtime.sendMessage({
         action: 'checkInbox',
-        username: username,
-        domain: domain
+        emailData: emailData
       });
       
       if (response && response.success) {
@@ -300,17 +387,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   function displayMessages(messages) {
     if (!messages || messages.length === 0) {
-      messageList.innerHTML = '<div class="empty-state">No messages yet</div>';
+      messageList.innerHTML = '<div class="empty-state">No messages yet. Waiting for email...</div>';
       return;
     }
     
-    messageList.innerHTML = messages.map(msg => `
-      <div class="message-item" data-id="${msg.id}">
-        <div class="message-from">From: ${msg.from}</div>
-        <div class="message-subject">${msg.subject}</div>
-        <div class="message-date">${new Date(msg.date).toLocaleString()}</div>
-      </div>
-    `).join('');
+    // Check if new messages arrived
+    const currentCount = messageList.querySelectorAll('.message-item').length;
+    
+    messageList.innerHTML = messages.map(msg => {
+      // 1secmail date is in YYYY-MM-DD HH:MM:SS format
+      const datePart = msg.date.split(' ')[1] || msg.date;
+      
+      return `
+        <div class="message-item" data-id="${msg.id}">
+          <div class="message-header-row">
+            <span class="message-from">${msg.from}</span>
+            <span class="message-time">${datePart}</span>
+          </div>
+          <div class="message-subject">${msg.subject}</div>
+        </div>
+      `;
+    }).join('');
+    
+    // Play subtle notification if new messages arrived
+    if (currentCount > 0 && messages.length > currentCount) {
+       console.log('[GhostLayer] New message received!');
+    }
     
     // Add click handlers
     document.querySelectorAll('.message-item').forEach(item => {
@@ -326,8 +428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await chrome.runtime.sendMessage({
         action: 'readEmail',
-        username: currentEmail.username,
-        domain: currentEmail.domain,
+        emailData: currentEmail,
         messageId: messageId
       });
       
