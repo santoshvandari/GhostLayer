@@ -101,15 +101,35 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function generateBurnerEmail() {
   try {
-    // Favor stable servers (Mail.tm & Guerrilla) over 1secmail
+    // Favor stable servers (Mail.tm, Guerrilla, Mailnesia)
     const rand = Math.random();
     let provider;
-    // if (rand < 0.45) provider = 'mailtm';
-    // else if (rand < 0.90) provider = 'guerrilla';
-    // else provider = '1secmail';
-    provider = "guerrilla"
+    if (rand < 0.33) provider = 'mailtm';
+    else if (rand < 0.66) provider = 'guerrilla';
+    else provider = 'mailnesia';
     
-    if (provider === 'guerrilla') {
+    if (provider === 'mailnesia') {
+      const mailbox = 'gl_' + Math.random().toString(36).substring(2, 10);
+      const email = `${mailbox}@mailnesia.com`;
+      
+      const newEmailItem = {
+        email: email,
+        mailbox: mailbox,
+        provider: 'mailnesia',
+        createdAt: Date.now()
+      };
+      
+      const result = await chrome.storage.local.get(['emailHistory', 'stats']);
+      const history = result.emailHistory || [];
+      const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
+      
+      history.unshift(newEmailItem);
+      if (history.length > 50) history.pop();
+      stats.emailsGenerated++;
+      
+      await chrome.storage.local.set({ emailHistory: history, stats: stats });
+      return { success: true, ...newEmailItem };
+    } else if (provider === 'guerrilla') {
       const response = await fetch('https://www.guerrillamail.com/ajax.php?f=get_email_address');
       const data = await response.json();
       
@@ -132,7 +152,11 @@ async function generateBurnerEmail() {
       return { success: true, ...newEmailItem };
     } else if (provider === 'mailtm') {
       // 1. Get Mail.tm domain
-      const domainsResponse = await fetch('https://api.mail.tm/domains');
+      const domainsResponse = await fetch('https://api.mail.tm/domains', {
+        headers: {
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        }
+      });
       const domainsData = await domainsResponse.json();
       const domain = domainsData['hydra:member'][0].domain;
       
@@ -143,13 +167,23 @@ async function generateBurnerEmail() {
       
       const createResponse = await fetch('https://api.mail.tm/accounts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        },
         body: JSON.stringify({ address: email, password: password })
       });
       
-      if (!createResponse.ok) throw new Error('Mail.tm account creation failed');
+      if (!createResponse.ok) {
+        const errText = await createResponse.text();
+        console.error('[GhostLayer] Mail.tm account creation failed:', errText);
+        throw new Error('Mail.tm account creation failed');
+      }
       
       const accountData = await createResponse.json();
+      
+      // 3. Get initial token
+      const token = await getMailTmToken(email, password);
       
       // Store in history
       const result = await chrome.storage.local.get(['emailHistory', 'stats']);
@@ -160,6 +194,7 @@ async function generateBurnerEmail() {
         email: email,
         username: email,
         password: password,
+        token: token, // Store token directly to avoid login spam
         provider: 'mailtm',
         accountId: accountData.id,
         createdAt: Date.now()
@@ -170,30 +205,6 @@ async function generateBurnerEmail() {
       stats.emailsGenerated++;
       
       await chrome.storage.local.set({ emailHistory: history, stats: stats });
-      return { success: true, ...newEmailItem };
-    } else {
-      // Legacy 1secmail
-      const randomUsername = 'gl_' + Math.random().toString(36).substring(2, 10);
-      const domains = ['1secmail.com', '1secmail.org', '1secmail.net', 'wwjmp.com', 'esiix.com', 'xojxe.com', 'yoggm.com'];
-      const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-      const email = `${randomUsername}@${randomDomain}`;
-      
-      const result = await chrome.storage.local.get(['emailHistory', 'stats']);
-      const history = result.emailHistory || [];
-      const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
-      
-      const newEmailItem = {
-        email: email,
-        username: randomUsername,
-        domain: randomDomain,
-        provider: '1secmail',
-        createdAt: Date.now()
-      };
-      
-      history.unshift(newEmailItem);
-      if (history.length > 50) history.pop();
-      stats.emailsGenerated++;
-      
       await chrome.storage.local.set({ emailHistory: history, stats: stats });
       return { success: true, ...newEmailItem };
     }
@@ -204,12 +215,15 @@ async function generateBurnerEmail() {
 }
 
 let lastEmailRequestTime = 0;
-const EMAIL_THROTTLE_MS = 8000; // 8 second safety lock
+const EMAIL_THROTTLE_MS = 6000; // Reduced to 6s for better UX, still safe
 
 async function getMailTmToken(email, password) {
   const response = await fetch('https://api.mail.tm/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+    },
     body: JSON.stringify({ address: email, password: password })
   });
   if (!response.ok) throw new Error('Mail.tm login failed');
@@ -223,7 +237,7 @@ async function checkEmailInbox(emailData) {
   
   if (now - lastEmailRequestTime < EMAIL_THROTTLE_MS) {
     const waitTime = Math.ceil((EMAIL_THROTTLE_MS - (now - lastEmailRequestTime)) / 1000);
-    throw new Error(`Cooling down... Please wait ${waitTime}s.`);
+    return { success: false, error: `Cooling down... Please wait ${waitTime}s.` };
   }
   
   try {
@@ -243,9 +257,9 @@ async function checkEmailInbox(emailData) {
       
       return { success: true, messages };
     } else if (provider === 'mailtm') {
-      const token = await getMailTmToken(email, password);
+      const authToken = emailData.token || await getMailTmToken(email, password);
       const response = await fetch('https://api.mail.tm/messages', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
       if (!response.ok) throw new Error('Mail.tm inbox check failed');
       const data = await response.json();
@@ -259,20 +273,27 @@ async function checkEmailInbox(emailData) {
       }));
       
       return { success: true, messages };
-    } else {
-      // 1secmail logic
-      const response = await fetch(
-        `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`
-      );
+    } else if (provider === 'mailnesia') {
+      const response = await fetch(`https://m.mailnesia.com/api/mailbox/${emailData.mailbox}`, {
+        headers: {
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        }
+      });
+      if (!response.ok) throw new Error('Mailnesia inbox check failed');
+      const data = await response.json();
       
-      if (response.status === 403) {
-        throw new Error('Access Denied (403). The mail server is rate-limiting requests.');
-      }
+      const messages = data.map(msg => ({
+        id: msg.id,
+        from: msg.from,
+        subject: msg.subject,
+        date: msg.date,
+        intro: msg.subject // Mailnesia API doesn't always provide intro in the list
+      }));
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const messages = await response.json();
       return { success: true, messages };
+    } else {
+      // 1secmail is down, return error suggesting to try a new email
+      throw new Error('1secmail server is currently down. Please generate a new burner email.');
     }
   } catch (error) {
     console.error('[GhostLayer] Inbox check failed:', error);
@@ -299,9 +320,9 @@ async function readEmail(emailData, messageId) {
         }
       };
     } else if (provider === 'mailtm') {
-      const token = await getMailTmToken(email, password);
+      const authToken = emailData.token || await getMailTmToken(email, password);
       const response = await fetch(`https://api.mail.tm/messages/${messageId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
       if (!response.ok) throw new Error('Mail.tm message read failed');
       const data = await response.json();
@@ -316,14 +337,27 @@ async function readEmail(emailData, messageId) {
           date: data.createdAt
         } 
       };
-    } else {
-      const response = await fetch(
-        `https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${messageId}`
-      );
+    } else if (provider === 'mailnesia') {
+      const response = await fetch(`https://m.mailnesia.com/api/mailbox/${emailData.mailbox}/${messageId}`, {
+        headers: {
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        }
+      });
+      if (!response.ok) throw new Error('Mailnesia message read failed');
+      const data = await response.json();
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const message = await response.json();
-      return { success: true, message };
+      return {
+        success: true,
+        message: {
+          from: data.from,
+          subject: data.subject,
+          textBody: data.textPlain,
+          htmlBody: data.textHtml,
+          date: data.date
+        }
+      };
+    } else {
+      throw new Error('This email provider is no longer supported.');
     }
   } catch (error) {
     console.error('[GhostLayer] Email read failed:', error);
