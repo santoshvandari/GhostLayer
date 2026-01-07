@@ -104,8 +104,8 @@ async function generateBurnerEmail() {
     // Favor stable servers (Mail.tm, Guerrilla, Mailnesia)
     const rand = Math.random();
     let provider;
-    if (rand < 0.40) provider = 'mailtm';
-    else if (rand < 0.80) provider = 'guerrilla';
+    if (rand < 0.33) provider = 'mailtm';
+    else if (rand < 0.66) provider = 'guerrilla';
     else provider = 'mailnesia';
     
     if (provider === 'mailnesia') {
