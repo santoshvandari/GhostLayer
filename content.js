@@ -13,18 +13,16 @@ console.log('[GhostLayer] Content script loaded');
     const response = await chrome.runtime.sendMessage({ action: 'getProfile' });
     
     if (response && response.profile) {
-      // Inject profile into page context
-      const script = document.createElement('script');
-      script.textContent = `window.__GHOSTLAYER_PROFILE__ = ${JSON.stringify(response.profile)};`;
-      (document.head || document.documentElement).appendChild(script);
-      script.remove();
+      // Pass the profile data via a document attribute to avoid CSP issues with script tags
+      document.documentElement.setAttribute('data-ghostlayer-profile', JSON.stringify(response.profile));
       
       // Inject the main spoofing script
       const spoofingScript = document.createElement('script');
       spoofingScript.src = chrome.runtime.getURL('injected.js');
+      
       (document.head || document.documentElement).appendChild(spoofingScript);
       
-      console.log('[GhostLayer] Fingerprint spoofing injected');
+      console.log('[GhostLayer] Fingerprint spoofing injected via bridge');
     }
   } catch (error) {
     console.error('[GhostLayer] Failed to inject spoofing:', error);

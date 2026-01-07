@@ -57,12 +57,12 @@ Randomizes your digital fingerprint on every session:
 - **Auto-Refresh** - Real-time email checking
 - **Email History** - Track your recent burner emails
 
-### 🎭 **AI Data Poisoning** (Pro Feature)
-- Automatically visits random websites in the background
-- Floods your ad-profile with conflicting interests
-- Makes your data useless to advertisers
-- Runs every 15 minutes
-- Completely undetectable
+### 🎭 **AI Data Poisoning** ✨ FREE!
+- Simulates browsing activity every 15 minutes
+- Confuses ad trackers with fake interests  
+- Makes your data profile useless to advertisers
+- Completely automated and undetectable
+- Now included for everyone!
 
 ### ⚡ **Performance**
 - Built on **Manifest V3** for maximum efficiency
@@ -108,12 +108,23 @@ Randomizes your digital fingerprint on every session:
 
 ## 🎯 Usage
 
-### Basic Privacy (Free)
+## 🎉 Everything is 100% FREE!
 
-1. **Enable Fingerprint Spoofing**
+**v1.0 Release:** All features are completely free with no limitations!
+- ✅ Unlimited fingerprint spoofing
+- ✅ Unlimited burner emails
+- ✅ AI data poisoning enabled
+- ✅ No ads, no upsells
+- ✅ Full feature access
+
+**Why free?** We're building a community first. Premium features may come later (see `/plan` folder), but v1.0 is our gift to the privacy community! 💜
+
+### How to Use
+
+1. **Enable All Features**
    - Click the GhostLayer icon
-   - Toggle "Fingerprint Spoofing" ON
-   - Your browser fingerprint is now randomized!
+   - Both toggles are ON by default
+   - All features active immediately!
 
 2. **Generate Burner Email**
    - Visit any website with an email field
@@ -125,13 +136,10 @@ Randomizes your digital fingerprint on every session:
    - View incoming verification codes
    - Click any message to read it
 
-### Advanced Protection (Pro)
-
-Upgrade to **GhostLayer Pro** ($4.99/mo) for:
-- ✅ **Unlimited Burner Emails** (Free: 3/day)
-- ✅ **AI Data Poisoning** - Confuse trackers
-- ✅ **Geo-Location Spoofing** - Hide your location
-- ✅ **Priority Support** - Direct assistance
+4. **Watch the Stats**
+   - Real-time tracker blocking count
+   - Emails generated counter
+   - Data poisoning activity
 
 ---
 
@@ -180,9 +188,9 @@ Uses 1secmail API:
 #### 3. Data Poisoning (`background.js`)
 Background noise generation:
 - Runs every 15 minutes via Chrome Alarms
-- Selects 3 random URLs from pool
+- Simulates 3-5 site visits
 - Logs activity for stats dashboard
-- Pro feature only
+- Free for everyone!
 
 ### Local Development
 

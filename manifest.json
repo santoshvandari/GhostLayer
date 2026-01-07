@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "GhostLayer: AI Privacy & Burner Identity",
   "short_name": "GhostLayer",
+  "author": "Santosh Bhandari",
   "version": "1.0.0",
   "description": "Mask your fingerprint, generate burner emails, and poison tracker data.",
   "icons": {
@@ -22,24 +23,40 @@
     "alarms"
   ],
   "host_permissions": [
-    "https://www.1secmail.com/*",
+    "https://*.1secmail.com/*",
+    "https://1secmail.com/*",
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{9e9432f8-73c9-4a22-a161-94d432f873c9}",
+      "strict_min_version": "109.0"
+    }
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["injected.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "injected.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

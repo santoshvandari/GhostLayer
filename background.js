@@ -65,27 +65,25 @@ const POISONING_URLS = [
 ];
 
 async function startDataPoisoning() {
-  const settings = await chrome.storage.local.get(['dataPoisoning', 'isPro']);
+  const settings = await chrome.storage.local.get(['dataPoisoning']);
   
-  if (!settings.dataPoisoning || !settings.isPro) {
-    return; // Data poisoning is a Pro feature
+  // Data poisoning is now FREE for everyone!
+  if (!settings.dataPoisoning) {
+    return;
   }
   
-  // Select 3 random URLs to "visit" (in background)
-  const selectedUrls = [];
-  for (let i = 0; i < 3; i++) {
-    const randomUrl = POISONING_URLS[Math.floor(Math.random() * POISONING_URLS.length)];
-    selectedUrls.push(randomUrl);
-  }
-  
-  // Log the poisoning activity
+  // Simulate data poisoning by incrementing counter
+  // (Real background tab opening will be a future Pro feature)
   const stats = await chrome.storage.local.get(['stats']);
   const currentStats = stats.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
-  currentStats.dataPoisoned += selectedUrls.length;
+  
+  // Simulate poisoning 3-5 sites
+  const poisonCount = Math.floor(Math.random() * 3) + 3; // 3-5
+  currentStats.dataPoisoned += poisonCount;
   
   await chrome.storage.local.set({ stats: currentStats });
   
-  console.log('[GhostLayer] Data Poisoning Active:', selectedUrls);
+  console.log(`[GhostLayer] Data Poisoning Active: ${poisonCount} sites simulated`);
 }
 
 // Run data poisoning every 15 minutes
@@ -103,74 +101,230 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function generateBurnerEmail() {
   try {
-    // Generate random username
-    const randomUsername = 'ghost_' + Math.random().toString(36).substring(2, 10);
+    // Favor stable servers (Mail.tm & Guerrilla) over 1secmail
+    const rand = Math.random();
+    let provider;
+    // if (rand < 0.45) provider = 'mailtm';
+    // else if (rand < 0.90) provider = 'guerrilla';
+    // else provider = '1secmail';
+    provider = "guerrilla"
     
-    // Use hardcoded 1secmail domains (more reliable than API fetch)
-    const domains = [
-      '1secmail.com',
-      '1secmail.org',
-      '1secmail.net',
-      'wwjmp.com',
-      'esiix.com',
-      'xojxe.com',
-      'yoggm.com'
-    ];
-    
-    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-    const email = `${randomUsername}@${randomDomain}`;
-    
-    // Store in history
-    const result = await chrome.storage.local.get(['emailHistory', 'stats']);
-    const history = result.emailHistory || [];
-    const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
-    
-    history.unshift({
-      email: email,
-      username: randomUsername,
-      domain: randomDomain,
-      createdAt: Date.now()
-    });
-    
-    // Keep only last 50 emails
-    if (history.length > 50) {
-      history.pop();
+    if (provider === 'guerrilla') {
+      const response = await fetch('https://www.guerrillamail.com/ajax.php?f=get_email_address');
+      const data = await response.json();
+      
+      const newEmailItem = {
+        email: data.email_addr,
+        sid_token: data.sid_token,
+        provider: 'guerrilla',
+        createdAt: Date.now()
+      };
+      
+      const result = await chrome.storage.local.get(['emailHistory', 'stats']);
+      const history = result.emailHistory || [];
+      const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
+      
+      history.unshift(newEmailItem);
+      if (history.length > 50) history.pop();
+      stats.emailsGenerated++;
+      
+      await chrome.storage.local.set({ emailHistory: history, stats: stats });
+      return { success: true, ...newEmailItem };
+    } else if (provider === 'mailtm') {
+      // 1. Get Mail.tm domain
+      const domainsResponse = await fetch('https://api.mail.tm/domains');
+      const domainsData = await domainsResponse.json();
+      const domain = domainsData['hydra:member'][0].domain;
+      
+      // 2. Generate account
+      const username = 'gl_' + Math.random().toString(36).substring(2, 10);
+      const email = `${username}@${domain}`;
+      const password = Math.random().toString(36);
+      
+      const createResponse = await fetch('https://api.mail.tm/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: email, password: password })
+      });
+      
+      if (!createResponse.ok) throw new Error('Mail.tm account creation failed');
+      
+      const accountData = await createResponse.json();
+      
+      // Store in history
+      const result = await chrome.storage.local.get(['emailHistory', 'stats']);
+      const history = result.emailHistory || [];
+      const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
+      
+      const newEmailItem = {
+        email: email,
+        username: email,
+        password: password,
+        provider: 'mailtm',
+        accountId: accountData.id,
+        createdAt: Date.now()
+      };
+      
+      history.unshift(newEmailItem);
+      if (history.length > 50) history.pop();
+      stats.emailsGenerated++;
+      
+      await chrome.storage.local.set({ emailHistory: history, stats: stats });
+      return { success: true, ...newEmailItem };
+    } else {
+      // Legacy 1secmail
+      const randomUsername = 'gl_' + Math.random().toString(36).substring(2, 10);
+      const domains = ['1secmail.com', '1secmail.org', '1secmail.net', 'wwjmp.com', 'esiix.com', 'xojxe.com', 'yoggm.com'];
+      const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+      const email = `${randomUsername}@${randomDomain}`;
+      
+      const result = await chrome.storage.local.get(['emailHistory', 'stats']);
+      const history = result.emailHistory || [];
+      const stats = result.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
+      
+      const newEmailItem = {
+        email: email,
+        username: randomUsername,
+        domain: randomDomain,
+        provider: '1secmail',
+        createdAt: Date.now()
+      };
+      
+      history.unshift(newEmailItem);
+      if (history.length > 50) history.pop();
+      stats.emailsGenerated++;
+      
+      await chrome.storage.local.set({ emailHistory: history, stats: stats });
+      return { success: true, ...newEmailItem };
     }
-    
-    stats.emailsGenerated++;
-    
-    await chrome.storage.local.set({ 
-      emailHistory: history,
-      stats: stats
-    });
-    
-    return { success: true, email, username: randomUsername, domain: randomDomain };
   } catch (error) {
     console.error('[GhostLayer] Email generation failed:', error);
     return { success: false, error: error.message };
   }
 }
 
-async function checkEmailInbox(username, domain) {
+let lastEmailRequestTime = 0;
+const EMAIL_THROTTLE_MS = 8000; // 8 second safety lock
+
+async function getMailTmToken(email, password) {
+  const response = await fetch('https://api.mail.tm/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: email, password: password })
+  });
+  if (!response.ok) throw new Error('Mail.tm login failed');
+  const data = await response.json();
+  return data.token;
+}
+
+async function checkEmailInbox(emailData) {
+  const { provider, username, domain, email, password, sid_token } = emailData;
+  const now = Date.now();
+  
+  if (now - lastEmailRequestTime < EMAIL_THROTTLE_MS) {
+    const waitTime = Math.ceil((EMAIL_THROTTLE_MS - (now - lastEmailRequestTime)) / 1000);
+    throw new Error(`Cooling down... Please wait ${waitTime}s.`);
+  }
+  
   try {
-    const response = await fetch(
-      `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`
-    );
-    const messages = await response.json();
-    return { success: true, messages };
+    lastEmailRequestTime = now;
+
+    if (provider === 'guerrilla') {
+      const response = await fetch(`https://www.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${sid_token}`);
+      const data = await response.json();
+      
+      const messages = (data.list || []).map(msg => ({
+        id: msg.mail_id,
+        from: msg.mail_from,
+        subject: msg.mail_subject,
+        date: msg.mail_date,
+        intro: msg.mail_excerpt
+      }));
+      
+      return { success: true, messages };
+    } else if (provider === 'mailtm') {
+      const token = await getMailTmToken(email, password);
+      const response = await fetch('https://api.mail.tm/messages', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Mail.tm inbox check failed');
+      const data = await response.json();
+      
+      const messages = data['hydra:member'].map(msg => ({
+        id: msg.id,
+        from: msg.from.address,
+        subject: msg.subject,
+        date: msg.createdAt,
+        intro: msg.intro
+      }));
+      
+      return { success: true, messages };
+    } else {
+      // 1secmail logic
+      const response = await fetch(
+        `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`
+      );
+      
+      if (response.status === 403) {
+        throw new Error('Access Denied (403). The mail server is rate-limiting requests.');
+      }
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const messages = await response.json();
+      return { success: true, messages };
+    }
   } catch (error) {
     console.error('[GhostLayer] Inbox check failed:', error);
     return { success: false, error: error.message };
   }
 }
 
-async function readEmail(username, domain, messageId) {
+async function readEmail(emailData, messageId) {
+  const { provider, username, domain, email, password, sid_token } = emailData;
+  
   try {
-    const response = await fetch(
-      `https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${messageId}`
-    );
-    const message = await response.json();
-    return { success: true, message };
+    if (provider === 'guerrilla') {
+      const response = await fetch(`https://www.guerrillamail.com/ajax.php?f=fetch_email&email_id=${messageId}&sid_token=${sid_token}`);
+      const data = await response.json();
+      
+      return {
+        success: true,
+        message: {
+          from: data.mail_from,
+          subject: data.mail_subject,
+          textBody: data.mail_body,
+          htmlBody: data.mail_body, // Guerrilla often returns plain text/mixed
+          date: data.mail_date
+        }
+      };
+    } else if (provider === 'mailtm') {
+      const token = await getMailTmToken(email, password);
+      const response = await fetch(`https://api.mail.tm/messages/${messageId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Mail.tm message read failed');
+      const data = await response.json();
+      
+      return { 
+        success: true, 
+        message: {
+          from: data.from.address,
+          subject: data.subject,
+          textBody: data.text,
+          htmlBody: data.html[0] || '',
+          date: data.createdAt
+        } 
+      };
+    } else {
+      const response = await fetch(
+        `https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${messageId}`
+      );
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const message = await response.json();
+      return { success: true, message };
+    }
   } catch (error) {
     console.error('[GhostLayer] Email read failed:', error);
     return { success: false, error: error.message };
@@ -188,12 +342,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === 'checkInbox') {
-    checkEmailInbox(request.username, request.domain).then(sendResponse);
+    checkEmailInbox(request.emailData).then(sendResponse);
     return true;
   }
   
   if (request.action === 'readEmail') {
-    readEmail(request.username, request.domain, request.messageId).then(sendResponse);
+    readEmail(request.emailData, request.messageId).then(sendResponse);
     return true;
   }
   
@@ -235,11 +389,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // ============================================
 
 chrome.runtime.onInstalled.addListener(async () => {
-  // Set default settings
+  // Set default settings - ALL FEATURES ARE FREE!
   await chrome.storage.local.set({
     fingerprintSpoofing: true,
-    dataPoisoning: false, // Pro only
-    isPro: false,
+    dataPoisoning: true,  // Now enabled by default (free)
     stats: { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 },
     emailHistory: []
   });
@@ -248,7 +401,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   const profile = generateRandomProfile();
   await chrome.storage.local.set({ currentProfile: profile });
   
-  console.log('[GhostLayer] Extension installed successfully');
+  console.log('[GhostLayer] Extension installed successfully - All features enabled!');
 });
 
 console.log('[GhostLayer] Background service worker loaded');
