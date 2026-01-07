@@ -27,7 +27,14 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{9e9432f8-73c9-4a22-a161-94d432f873c9}",
+      "strict_min_version": "109.0"
+    }
   },
   "content_scripts": [
     {

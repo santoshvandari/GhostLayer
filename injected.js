@@ -5,8 +5,22 @@
 (function() {
   'use strict';
   
-  // Get spoofing profile from extension
-  const PROFILE = window.__GHOSTLAYER_PROFILE__;
+  // Get spoofing profile from the current script's dataset to avoid CSP issues
+  const currentScript = document.currentScript;
+  let PROFILE = null;
+  
+  if (currentScript && currentScript.dataset.profile) {
+    try {
+      PROFILE = JSON.parse(currentScript.dataset.profile);
+    } catch (e) {
+      console.error('[GhostLayer] Failed to parse profile data');
+    }
+  }
+  
+  if (!PROFILE) {
+    // Fallback to global if dataset fails
+    PROFILE = window.__GHOSTLAYER_PROFILE__;
+  }
   
   if (!PROFILE) {
     console.warn('[GhostLayer] No profile found, skipping spoofing');
@@ -162,4 +176,9 @@
   }
   
   console.log('[GhostLayer] Fingerprint spoofing active');
+  
+  // Clean up: remove the script tag after execution
+  if (currentScript && currentScript.parentNode) {
+    currentScript.remove();
+  }
 })();
