@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![GhostLayer Banner](.github-banner.png)
+![GhostLayer Banner](github-banner.png)
 
 ![GhostLayer Logo](icons/icon128.png)
 

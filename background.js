@@ -106,9 +106,16 @@ async function generateBurnerEmail() {
     // Generate random username
     const randomUsername = 'ghost_' + Math.random().toString(36).substring(2, 10);
     
-    // Get available domains from 1secmail
-    const domainsResponse = await fetch('https://www.1secmail.com/api/v1/?action=getDomainList');
-    const domains = await domainsResponse.json();
+    // Use hardcoded 1secmail domains (more reliable than API fetch)
+    const domains = [
+      '1secmail.com',
+      '1secmail.org',
+      '1secmail.net',
+      'wwjmp.com',
+      'esiix.com',
+      'xojxe.com',
+      'yoggm.com'
+    ];
     
     const randomDomain = domains[Math.floor(Math.random() * domains.length)];
     const email = `${randomUsername}@${randomDomain}`;
