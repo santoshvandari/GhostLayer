@@ -171,6 +171,22 @@
     </footer>
   </div>
 
-  <script src="popup.js"></script>
+  <!-- Message Modal -->
+  <div id="messageModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-from" id="modalFrom">-</span>
+          <span class="modal-subject" id="modalSubject">-</span>
+        </div>
+        <button class="modal-close" id="closeModalBtn">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Content injected here -->
+      </div>
+    </div>
+  </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

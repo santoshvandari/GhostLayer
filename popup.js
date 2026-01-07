@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const closeInboxBtn = document.getElementById('closeInboxBtn');
   const messageList = document.getElementById('messageList');
   
+  const messageModal = document.getElementById('messageModal');
+  const modalFrom = document.getElementById('modalFrom');
+  const modalSubject = document.getElementById('modalSubject');
+  const modalBody = document.getElementById('modalBody');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  
   const fingerprintToggle = document.getElementById('fingerprintToggle');
   const dataPoisoningToggle = document.getElementById('dataPoisoningToggle');
   
@@ -117,8 +123,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const timeAgo = getTimeAgo(date);
         
         return `
-          <div class="history-item" data-email="${item.email}" data-username="${item.username}" data-domain="${item.domain}">
-            <div class="history-email">${item.email}</div>
+          <div class="history-item" data-email="${item.email}">
+            <div class="history-email-row">
+              <span class="history-email">${item.email}</span>
+              <span class="history-provider">${item.provider || '1secmail'}</span>
+            </div>
             <div class="history-date">${timeAgo}</div>
           </div>
         `;
@@ -314,6 +323,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         emailData: currentEmail
       });
       
+      if (!response || !response.success) {
+        throw new Error(response ? response.error : 'Unknown error');
+      }
+      
       if (response && response.success) {
         displayMessages(response.messages);
         inboxDisplay.classList.remove('hidden');
@@ -379,6 +392,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       if (response && response.success) {
         displayMessages(response.messages);
+      } else {
+        throw new Error(response ? response.error : 'Unknown error');
       }
     } catch (error) {
       console.error('[GhostLayer] Auto inbox check failed:', error);
@@ -395,8 +410,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentCount = messageList.querySelectorAll('.message-item').length;
     
     messageList.innerHTML = messages.map(msg => {
-      // 1secmail date is in YYYY-MM-DD HH:MM:SS format
-      const datePart = msg.date.split(' ')[1] || msg.date;
+      // Handle both "YYYY-MM-DD HH:MM:SS" and ISO formats
+      let datePart = msg.date;
+      if (msg.date.includes(' ')) {
+        datePart = msg.date.split(' ')[1].substring(0, 5); // HH:MM
+      } else if (msg.date.includes('T')) {
+        const d = new Date(msg.date);
+        datePart = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      }
       
       return `
         <div class="message-item" data-id="${msg.id}">
@@ -434,12 +455,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       if (response && response.success) {
         const msg = response.message;
-        alert(`From: ${msg.from}\nSubject: ${msg.subject}\n\n${msg.textBody || msg.htmlBody || 'No content'}`);
+        
+        // Populate and show modal
+        modalFrom.textContent = `From: ${msg.from}`;
+        modalSubject.textContent = msg.subject;
+        modalBody.innerHTML = msg.htmlBody || msg.textBody || 'No content';
+        
+        messageModal.classList.remove('hidden');
+      } else {
+        throw new Error(response ? response.error : 'Unknown error');
       }
     } catch (error) {
       console.error('[GhostLayer] Message read failed:', error);
     }
   }
+
+  // Close Modal Listeners
+  closeModalBtn.addEventListener('click', () => {
+    messageModal.classList.add('hidden');
+  });
+
+  // Close modal on click outside
+  messageModal.addEventListener('click', (e) => {
+    if (e.target === messageModal) {
+      messageModal.classList.add('hidden');
+    }
+  });
+
+  // Close modal on escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !messageModal.classList.contains('hidden')) {
+      messageModal.classList.add('hidden');
+    }
+  });
   
   closeInboxBtn.addEventListener('click', () => {
     inboxDisplay.classList.add('hidden');

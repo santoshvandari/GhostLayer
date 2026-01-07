@@ -104,10 +104,9 @@ async function generateBurnerEmail() {
     // Favor stable servers (Mail.tm & Guerrilla) over 1secmail
     const rand = Math.random();
     let provider;
-    // if (rand < 0.45) provider = 'mailtm';
-    // else if (rand < 0.90) provider = 'guerrilla';
-    // else provider = '1secmail';
-    provider = "guerrilla"
+    if (rand < 0.45) provider = 'mailtm';
+    else if (rand < 0.90) provider = 'guerrilla';
+    else provider = '1secmail';
     
     if (provider === 'guerrilla') {
       const response = await fetch('https://www.guerrillamail.com/ajax.php?f=get_email_address');
@@ -132,7 +131,11 @@ async function generateBurnerEmail() {
       return { success: true, ...newEmailItem };
     } else if (provider === 'mailtm') {
       // 1. Get Mail.tm domain
-      const domainsResponse = await fetch('https://api.mail.tm/domains');
+      const domainsResponse = await fetch('https://api.mail.tm/domains', {
+        headers: {
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        }
+      });
       const domainsData = await domainsResponse.json();
       const domain = domainsData['hydra:member'][0].domain;
       
@@ -143,13 +146,23 @@ async function generateBurnerEmail() {
       
       const createResponse = await fetch('https://api.mail.tm/accounts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+        },
         body: JSON.stringify({ address: email, password: password })
       });
       
-      if (!createResponse.ok) throw new Error('Mail.tm account creation failed');
+      if (!createResponse.ok) {
+        const errText = await createResponse.text();
+        console.error('[GhostLayer] Mail.tm account creation failed:', errText);
+        throw new Error('Mail.tm account creation failed');
+      }
       
       const accountData = await createResponse.json();
+      
+      // 3. Get initial token
+      const token = await getMailTmToken(email, password);
       
       // Store in history
       const result = await chrome.storage.local.get(['emailHistory', 'stats']);
@@ -160,6 +173,7 @@ async function generateBurnerEmail() {
         email: email,
         username: email,
         password: password,
+        token: token, // Store token directly to avoid login spam
         provider: 'mailtm',
         accountId: accountData.id,
         createdAt: Date.now()
@@ -174,7 +188,7 @@ async function generateBurnerEmail() {
     } else {
       // Legacy 1secmail
       const randomUsername = 'gl_' + Math.random().toString(36).substring(2, 10);
-      const domains = ['1secmail.com', '1secmail.org', '1secmail.net', 'wwjmp.com', 'esiix.com', 'xojxe.com', 'yoggm.com'];
+      const domains = ['1secmail.com', '1secmail.org', '1secmail.net', 'wwjmp.com', 'esiix.com', 'xojxe.com', 'yoggm.com', 'kzscf.com', 'vggby.com'];
       const randomDomain = domains[Math.floor(Math.random() * domains.length)];
       const email = `${randomUsername}@${randomDomain}`;
       
@@ -204,12 +218,15 @@ async function generateBurnerEmail() {
 }
 
 let lastEmailRequestTime = 0;
-const EMAIL_THROTTLE_MS = 8000; // 8 second safety lock
+const EMAIL_THROTTLE_MS = 6000; // Reduced to 6s for better UX, still safe
 
 async function getMailTmToken(email, password) {
   const response = await fetch('https://api.mail.tm/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+    },
     body: JSON.stringify({ address: email, password: password })
   });
   if (!response.ok) throw new Error('Mail.tm login failed');
@@ -223,7 +240,7 @@ async function checkEmailInbox(emailData) {
   
   if (now - lastEmailRequestTime < EMAIL_THROTTLE_MS) {
     const waitTime = Math.ceil((EMAIL_THROTTLE_MS - (now - lastEmailRequestTime)) / 1000);
-    throw new Error(`Cooling down... Please wait ${waitTime}s.`);
+    return { success: false, error: `Cooling down... Please wait ${waitTime}s.` };
   }
   
   try {
@@ -243,9 +260,9 @@ async function checkEmailInbox(emailData) {
       
       return { success: true, messages };
     } else if (provider === 'mailtm') {
-      const token = await getMailTmToken(email, password);
+      const authToken = emailData.token || await getMailTmToken(email, password);
       const response = await fetch('https://api.mail.tm/messages', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
       if (!response.ok) throw new Error('Mail.tm inbox check failed');
       const data = await response.json();
@@ -260,9 +277,14 @@ async function checkEmailInbox(emailData) {
       
       return { success: true, messages };
     } else {
-      // 1secmail logic
+      // 1secmail with organic headers
       const response = await fetch(
-        `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`
+        `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`,
+        {
+          headers: {
+            'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+          }
+        }
       );
       
       if (response.status === 403) {
@@ -299,9 +321,9 @@ async function readEmail(emailData, messageId) {
         }
       };
     } else if (provider === 'mailtm') {
-      const token = await getMailTmToken(email, password);
+      const authToken = emailData.token || await getMailTmToken(email, password);
       const response = await fetch(`https://api.mail.tm/messages/${messageId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
       if (!response.ok) throw new Error('Mail.tm message read failed');
       const data = await response.json();
@@ -317,8 +339,14 @@ async function readEmail(emailData, messageId) {
         } 
       };
     } else {
+      // 1secmail with organic headers
       const response = await fetch(
-        `https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${messageId}`
+        `https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${messageId}`,
+        {
+          headers: {
+            'User-Agent': SPOOFING_PROFILES.userAgents[Math.floor(Math.random() * SPOOFING_PROFILES.userAgents.length)]
+          }
+        }
       );
       
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
