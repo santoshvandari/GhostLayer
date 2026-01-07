@@ -63,16 +63,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   async function loadSettings() {
     try {
-      const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning', 'isPro']);
+      const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning']);
       
       fingerprintToggle.checked = settings.fingerprintSpoofing !== false;
-      dataPoisoningToggle.checked = settings.dataPoisoning === true;
+      dataPoisoningToggle.checked = settings.dataPoisoning !== false;
       
-      // Enable data poisoning toggle if Pro
-      if (settings.isPro) {
-        dataPoisoningToggle.disabled = false;
-        document.getElementById('upgradeSection').style.display = 'none';
-      }
+      console.log('[GhostLayer] Settings loaded - All features enabled!');
     } catch (error) {
       console.error('[GhostLayer] Failed to load settings:', error);
     }

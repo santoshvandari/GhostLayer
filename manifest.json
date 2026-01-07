@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "GhostLayer: AI Privacy & Burner Identity",
   "short_name": "GhostLayer",
+  "author": "Santosh Bhandari",
   "version": "1.0.0",
   "description": "Mask your fingerprint, generate burner emails, and poison tracker data.",
   "icons": {
@@ -30,16 +31,24 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["injected.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "injected.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

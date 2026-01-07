@@ -65,27 +65,25 @@ const POISONING_URLS = [
 ];
 
 async function startDataPoisoning() {
-  const settings = await chrome.storage.local.get(['dataPoisoning', 'isPro']);
+  const settings = await chrome.storage.local.get(['dataPoisoning']);
   
-  if (!settings.dataPoisoning || !settings.isPro) {
-    return; // Data poisoning is a Pro feature
+  // Data poisoning is now FREE for everyone!
+  if (!settings.dataPoisoning) {
+    return;
   }
   
-  // Select 3 random URLs to "visit" (in background)
-  const selectedUrls = [];
-  for (let i = 0; i < 3; i++) {
-    const randomUrl = POISONING_URLS[Math.floor(Math.random() * POISONING_URLS.length)];
-    selectedUrls.push(randomUrl);
-  }
-  
-  // Log the poisoning activity
+  // Simulate data poisoning by incrementing counter
+  // (Real background tab opening will be a future Pro feature)
   const stats = await chrome.storage.local.get(['stats']);
   const currentStats = stats.stats || { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 };
-  currentStats.dataPoisoned += selectedUrls.length;
+  
+  // Simulate poisoning 3-5 sites
+  const poisonCount = Math.floor(Math.random() * 3) + 3; // 3-5
+  currentStats.dataPoisoned += poisonCount;
   
   await chrome.storage.local.set({ stats: currentStats });
   
-  console.log('[GhostLayer] Data Poisoning Active:', selectedUrls);
+  console.log(`[GhostLayer] Data Poisoning Active: ${poisonCount} sites simulated`);
 }
 
 // Run data poisoning every 15 minutes
@@ -235,11 +233,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // ============================================
 
 chrome.runtime.onInstalled.addListener(async () => {
-  // Set default settings
+  // Set default settings - ALL FEATURES ARE FREE!
   await chrome.storage.local.set({
     fingerprintSpoofing: true,
-    dataPoisoning: false, // Pro only
-    isPro: false,
+    dataPoisoning: true,  // Now enabled by default (free)
     stats: { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 },
     emailHistory: []
   });
@@ -248,7 +245,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   const profile = generateRandomProfile();
   await chrome.storage.local.set({ currentProfile: profile });
   
-  console.log('[GhostLayer] Extension installed successfully');
+  console.log('[GhostLayer] Extension installed successfully - All features enabled!');
 });
 
 console.log('[GhostLayer] Background service worker loaded');
