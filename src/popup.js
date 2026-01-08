@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         Refresh Inbox
       `;
     } catch (error) {
-      console.error('[GhostLayer] Inbox check failed:', error);
+      console.error('[GhostLayer] Inbox check failed:', error); // Removed in future
       
       const isThrottle = error.message.includes('Cooling down');
       const is403 = error.message.includes('403');
