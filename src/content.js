@@ -9,12 +9,17 @@ console.log('[GhostLayer] Content script loaded');
 
 (async function injectSpoofing() {
   try {
-    // Get current profile from background
+    // Get current profile and noise from background
     const response = await chrome.runtime.sendMessage({ action: 'getProfile' });
+    const noiseResponse = await chrome.runtime.sendMessage({ action: 'getTelemetryNoise' });
     
     if (response && response.profile) {
       // Pass the profile data via a document attribute to avoid CSP issues with script tags
       document.documentElement.setAttribute('data-ghostlayer-profile', JSON.stringify(response.profile));
+      
+      if (noiseResponse && noiseResponse.noise) {
+        document.documentElement.setAttribute('data-ghostlayer-noise', JSON.stringify(noiseResponse.noise));
+      }
       
       // Inject the main spoofing script
       const spoofingScript = document.createElement('script');
@@ -55,8 +60,8 @@ function detectTrackers() {
   scripts.forEach(script => {
     const src = script.getAttribute('src');
     if (src && TRACKER_PATTERNS.some(pattern => pattern.test(src))) {
-      console.log('[GhostLayer] Blocked tracker:', src);
-      script.remove();
+      console.log('[GhostLayer] Detected tracker (Poisoning Targets):', src);
+      // script.remove(); // DISABLED: We don't block, we poison via injected.js
       blockCount++;
     }
   });

@@ -177,10 +177,65 @@
     };
   }
   
+  // ============================================
+  // TRACKER DATA POISONING
+  // ============================================
+  
+  let NOISE = null;
+  const noiseData = document.documentElement.getAttribute('data-ghostlayer-noise');
+  
+  if (noiseData) {
+    try {
+      NOISE = JSON.parse(noiseData);
+      document.documentElement.removeAttribute('data-ghostlayer-noise');
+    } catch (e) {
+      console.error('[GhostLayer] Failed to parse noise data');
+    }
+  }
+  
+  if (NOISE) {
+    // Active poisoning loop
+    setInterval(() => {
+      // Poison Google Tag Manager / Analytics
+      if (window.dataLayer && Array.isArray(window.dataLayer)) {
+        if (Math.random() > 0.95) { // Occasional injection
+          window.dataLayer.push({
+            'event': NOISE.event,
+            'screen_resolution': `${NOISE.screen.width}x${NOISE.screen.height}`,
+            'non_interaction': true
+          });
+        }
+      }
+      
+      // Poison Meta Pixel
+      if (typeof window.fbq === 'function') {
+        if (Math.random() > 0.95) {
+          window.fbq('trackCustom', NOISE.event, {
+            content_name: 'GhostLayer_Noise',
+            value: Math.random() * 100
+          });
+        }
+      }
+      
+      // Poison Segment / Mixpanel
+      if (typeof window.analytics === 'object' && typeof window.analytics.track === 'function') {
+        if (Math.random() > 0.95) {
+          window.analytics.track(NOISE.event, {
+            platform: 'GhostLayer',
+            noisy: true
+          });
+        }
+      }
+    }, 10000); // Check every 10 seconds
+    
+    console.log('[GhostLayer] Tracker data poisoning active');
+  }
+
+  
   console.log('[GhostLayer] Fingerprint spoofing active');
   
   // Clean up: remove the script tag after execution
-  if (currentScript && currentScript.parentNode) {
-    currentScript.remove();
+  if (document.currentScript && document.currentScript.parentNode) {
+    document.currentScript.remove();
   }
 })();
