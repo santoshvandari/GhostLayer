@@ -67,7 +67,7 @@ Randomizes your digital fingerprint for every session:
 
 ### From Chrome Web Store (Recommended)
 
-1. Visit the [Chrome Web Store](https://www.google.com/search?q=%23) (Coming Soon).
+1. Visit the [Chrome Web Store](#) (Coming Soon).
 2. Click **"Add to Chrome"**.
 3. Click the GhostLayer icon in your toolbar to begin.
 
@@ -75,8 +75,8 @@ Randomizes your digital fingerprint for every session:
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/ghostlayer.git
-cd ghostlayer
+git clone https://github.com/santoshvandari/GhostLayer
+cd GhostLayer
 
 ```
 
@@ -136,9 +136,15 @@ GhostLayer/
 
 ---
 
-## Contributing & Support
 
-We welcome contributions! Please feel free to fork the repo, create a feature branch, and submit a Pull Request.
+## Contributing
+We welcome contributions! If you'd like to contribute to this Flutter Package Project, please check out our [Contribution Guidelines](Contributing.md).
+
+## Code of Conduct
+Please review our [Code of Conduct](Code_of_Conduct.md) before participating in this app.
+
+## License
+This project is licensed under the MIT [License](LICENSE).
 
 ### Support the Project
 
@@ -154,8 +160,6 @@ If GhostLayer helps you stay anonymous, consider supporting its development:
 
 **Take back your digital footprint. Go Ghost.** 👻
 
-[⬆ Back to Top](https://www.google.com/search?q=%23-ghostlayer-ai-privacy--burner-identity)
+[⬆ Back to Top](#ghostlayer-ai-privacy--burner-identity)
 
 </div>
-
----
