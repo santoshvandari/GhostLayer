@@ -4,7 +4,7 @@
 import { generateRandomProfile } from './modules/fingerprint.js';
 import { setupPoisoningAlarm } from './modules/dataPoisoner.js';
 import { generateBurnerEmail, checkEmailInbox, readEmail } from './modules/emailManager.js';
-import { handleTrackerBlocked, setupTrackerBlocker } from './modules/trackerBlocker.js';
+import { handleTrackerBlocked, setupTrackerBlocker, generateTelemetryNoise } from './modules/trackerBlocker.js';
 
 // ============================================
 // 1. INITIALIZATION & ALARMS
@@ -46,6 +46,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       
     case 'trackerBlocked':
       handleTrackerBlocked(request.count || 1).then(sendResponse);
+      return true;
+      
+    case 'getTelemetryNoise':
+      sendResponse({ noise: generateTelemetryNoise() });
       return true;
       
     case 'getStats':
