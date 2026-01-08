@@ -7,6 +7,7 @@
 2. **Extension Icons** - Converted to proper PNG format at correct sizes
 3. **Pro Restrictions Removed** - Everything is now FREE!
 4. **CSP Violation Fixed** - Fixed "inline script" issue that blocked spoofing on sites like GitHub.
+5. **Packed the extension in crx** - Packed the extension in crx
 
 ---
 

@@ -2,25 +2,17 @@
 
 <div align="center">
 
-![GhostLayer Banner](github-banner.png)
-
-![GhostLayer Logo](icons/icon128.png)
-
 **Stop hiding. Start confusing.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/ghostlayer)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Download-orange.svg)](#installation)
+*Next-generation privacy extension that actively fights back against digital tracking.*
 
-*Next-generation privacy extension that actively fights back against digital tracking*
-
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Development](#-development) • [Roadmap](#-roadmap)
+[Features](https://www.google.com/search?q=%23-features) • [Installation](https://www.google.com/search?q=%23-installation) • [Usage](https://www.google.com/search?q=%23-usage) • [Development](https://www.google.com/search?q=%23-development) • [Roadmap](https://www.google.com/search?q=%23-roadmap)
 
 </div>
 
 ---
 
-## 🚀 Why GhostLayer?
+## Why GhostLayer?
 
 Traditional ad-blockers are **failing**. Websites are forcing you to disable them, and trackers are getting smarter. **GhostLayer** is the next generation of privacy that works *with* the modern web, not against it.
 
@@ -29,7 +21,7 @@ Instead of breaking websites by blocking scripts, GhostLayer feeds trackers **"D
 ### The Problem We Solve
 
 | Traditional Approach | GhostLayer Approach |
-|---------------------|---------------------|
+| --- | --- |
 | ❌ Blocks tracking scripts | ✅ Spoofs your fingerprint |
 | ❌ Websites detect and block you | ✅ Completely undetectable |
 | ❌ Breaks website functionality | ✅ Seamless browsing experience |
@@ -37,291 +29,124 @@ Instead of breaking websites by blocking scripts, GhostLayer feeds trackers **"D
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🛡️ **Smart Fingerprint Spoofing**
-Randomizes your digital fingerprint on every session:
-- **UserAgent** - Appears as different browsers
-- **Screen Resolution** - Fake display dimensions
-- **Hardware Concurrency** - Randomized CPU cores
-- **Device Memory** - Spoofed RAM
-- **WebGL Fingerprint** - Randomized graphics data
-- **Canvas Fingerprint** - Injected noise
-- **Battery Status** - Randomized battery data
-- **Timezone** - Location masking
+### **Smart Fingerprint Spoofing**
 
-### 📧 **Instant Burner Emails**
-- **One-Click Generation** - Ghost icon appears on email fields
-- **Disposable Addresses** - Never give your real email again
-- **Built-in Inbox** - View verification codes directly in the extension
-- **Auto-Refresh** - Real-time email checking
-- **Email History** - Track your recent burner emails
+Randomizes your digital fingerprint for every session:
 
-### 🎭 **AI Data Poisoning** ✨ FREE!
-- Simulates browsing activity every 15 minutes
-- Confuses ad trackers with fake interests  
-- Makes your data profile useless to advertisers
-- Completely automated and undetectable
-- Now included for everyone!
+* **UserAgent** - Appears as different browsers/OS versions.
+* **Screen Resolution** - Fakes display dimensions.
+* **Hardware Concurrency** - Randomizes reported CPU cores.
+* **Device Memory** - Spoofs available RAM.
+* **WebGL/Canvas Fingerprint** - Injects noise into graphics data.
+* **Battery & Timezone** - Masks location and device health.
 
-### ⚡ **Performance**
-- Built on **Manifest V3** for maximum efficiency
-- Zero impact on browsing speed
-- Lightweight background service worker
-- Smart resource management
+### **Instant Burner Emails**
 
-### 🚫 **Privacy-First Design**
-- **No Sign-Up Required** - Start using immediately
-- **No Data Collection** - We don't store your data
-- **Open Source** - Full transparency
-- **No Tracking** - Ironically, we don't track you
+* **One-Click Generation** - A ghost icon appears directly in email fields.
+* **Disposable Addresses** - Keep your primary inbox spam-free.
+* **Built-in Inbox** - View verification codes directly in the extension popup.
+* **Real-time Updates** - Auto-refreshing inbox for instant access.
+
+### **AI Data Poisoning**
+
+* Simulates background browsing activity every 15 minutes.
+* Confuses ad trackers with fake interests and search patterns.
+* Makes your actual data profile statistically useless to advertisers.
+
+### **Performance & Privacy**
+
+* **Manifest V3** - Built for maximum efficiency and security.
+* **Zero Logs** - No sign-up required; no data ever leaves your local machine.
+* **Open Source** - Audit the code yourself for full transparency.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### From Chrome Web Store (Recommended)
-1. Visit the [Chrome Web Store](#) (Coming Soon)
-2. Click "Add to Chrome"
-3. Click the GhostLayer icon to start
+
+1. Visit the [Chrome Web Store](https://www.google.com/search?q=%23) (Coming Soon).
+2. Click **"Add to Chrome"**.
+3. Click the GhostLayer icon in your toolbar to begin.
 
 ### Manual Installation (Developer Mode)
-1. **Download the extension**
-   ```bash
-   git clone https://github.com/yourusername/ghostlayer.git
-   cd ghostlayer
-   ```
 
-2. **Open Chrome Extensions**
-   - Navigate to `chrome://extensions/`
-   - Enable "Developer mode" (top-right toggle)
+1. **Clone the repository:**
+```bash
+git clone https://github.com/yourusername/ghostlayer.git
+cd ghostlayer
 
-3. **Load the extension**
-   - Click "Load unpacked"
-   - Select the `GhostLayer` folder
+```
 
-4. **Pin the extension**
-   - Click the puzzle icon in Chrome toolbar
-   - Pin GhostLayer for easy access
+
+2. **Open Chrome Extensions:**
+* Navigate to `chrome://extensions/`.
+* Enable **"Developer mode"** (top-right toggle).
+
+
+3. **Load the extension:**
+* Click **"Load unpacked"**.
+* Select the `src` folder within the project directory.
+
+
 
 ---
 
-## 🎯 Usage
+## Usage
 
-## 🎉 Everything is 100% FREE!
+### Everything is FREE!
 
-**v1.0 Release:** All features are completely free with no limitations!
-- ✅ Unlimited fingerprint spoofing
-- ✅ Unlimited burner emails
-- ✅ AI data poisoning enabled
-- ✅ No ads, no upsells
-- ✅ Full feature access
+**v1.0 Release:** All features are currently unlocked with no limitations. No ads, no upsells, just privacy.
 
-**Why free?** We're building a community first. Premium features may come later (see `/plan` folder), but v1.0 is our gift to the privacy community! 💜
-
-### How to Use
-
-1. **Enable All Features**
-   - Click the GhostLayer icon
-   - Both toggles are ON by default
-   - All features active immediately!
-
-2. **Generate Burner Email**
-   - Visit any website with an email field
-   - Click the purple ghost icon that appears
-   - Your burner email is auto-filled!
-
-3. **Check Your Inbox**
-   - Click "Check Inbox" in the popup
-   - View incoming verification codes
-   - Click any message to read it
-
-4. **Watch the Stats**
-   - Real-time tracker blocking count
-   - Emails generated counter
-   - Data poisoning activity
+1. **Enable Features:** Click the GhostLayer icon. Both toggles (Privacy & Poisoning) are ON by default.
+2. **Generate Email:** Click the purple ghost icon inside any email input field on the web.
+3. **Check Inbox:** Use the extension popup to view incoming mail or verification codes.
+4. **Monitor Stats:** Track how many fingerprints have been spoofed and how much "poison" has been injected in real-time.
 
 ---
 
 ## 🛠 Development
 
 ### Tech Stack
-- **Manifest V3** - Modern Chrome extension architecture
-- **Vanilla JavaScript** - No frameworks, pure performance
-- **1secmail API** - Temporary email service
-- **CSS3 Animations** - Smooth, premium UI
+
+* **Manifest V3** - Modern extension architecture.
+* **Vanilla JavaScript** - Lightweight, dependency-free performance.
+* **APIs** - Mailtm, Guerrilla, and Mailnesia for temporary mail.
+* **CSS3** - Custom "Cybersecurity Dark" theme.
 
 ### Project Structure
-```
+
+```text
 GhostLayer/
-├── manifest.json           # Extension configuration
-├── background.js           # Service worker (spoofing, emails)
-├── content.js             # Content script (page interaction)
-├── injected.js            # Page-context script (API overrides)
-├── popup.html             # Extension popup UI
-├── popup.css              # Cybersecurity dark theme
-├── popup.js               # Popup interactivity
-├── icons/                 # Extension icons
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md              # This file
+├── src/
+│   ├── manifest.json       # Extension configuration
+│   ├── background.js        # Service worker (Alarms & APIs)
+│   ├── content.js           # Content script (DOM interaction)
+│   ├── injected.js          # API Overrides (Fingerprinting)
+│   ├── popup.html/js/css    # UI Components
+│   └── modules/             
+│       ├── fingerprint.js   # Spoofing logic
+│       ├── emailManager.js  # API integration
+│       └── dataPoisoner.js  # Noise generation logic
+└── README.md
+
 ```
 
-### Key Components
-
-#### 1. Fingerprint Spoofing Engine (`injected.js`)
-Overrides native browser APIs:
-- `Navigator.prototype.userAgent`
-- `Screen.prototype.width/height`
-- `Navigator.prototype.hardwareConcurrency`
-- `WebGLRenderingContext.prototype.getParameter`
-- `HTMLCanvasElement.prototype.toDataURL`
-
-#### 2. Email Generation (`background.js`)
-Uses 1secmail API:
-- Generate random username + domain
-- Store in local history
-- Auto-refresh inbox every 5 seconds
-- Support for reading messages
-
-#### 3. Data Poisoning (`background.js`)
-Background noise generation:
-- Runs every 15 minutes via Chrome Alarms
-- Simulates 3-5 site visits
-- Logs activity for stats dashboard
-- Free for everyone!
-
-### Local Development
-
-1. **Make changes to any file**
-2. **Reload the extension**
-   - Go to `chrome://extensions/`
-   - Click the reload icon on GhostLayer
-3. **Test your changes**
-   - Visit a website
-   - Check fingerprint: https://browserleaks.com/
-   - Test email generation
-
-### Building for Production
-
-1. **Update version** in `manifest.json`
-2. **Test all features**
-3. **Create ZIP for Chrome Web Store**
-   ```bash
-   zip -r ghostlayer-v1.0.0.zip . -x "*.git*" "*.md" "node_modules/*"
-   ```
-
 ---
 
-## 🎨 Design Philosophy
+## Contributing & Support
 
-### Color Palette
-- **Primary**: `#6366f1` (Cyber Violet) - Technology/AI
-- **Secondary**: `#0f172a` (Slate Black) - Stealth
-- **Accent**: `#10b981` (Neon Green) - Success/Active states
+We welcome contributions! Please feel free to fork the repo, create a feature branch, and submit a Pull Request.
 
-### Visual Identity
-- Minimalist ghost + shield icon
-- Cyberpunk tech aesthetic
-- Dark theme for privacy focus
-- Smooth animations for premium feel
+### Support the Project
 
----
+If GhostLayer helps you stay anonymous, consider supporting its development:
 
-## 🔒 Privacy & Security
-
-### What We Collect
-**Nothing.** Seriously.
-- No analytics
-- No user tracking
-- No server communication (except 1secmail API)
-- All data stored locally in Chrome storage
-
-### How Fingerprint Spoofing Works
-1. Extension injects a script into every page
-2. Script runs before website scripts load
-3. Overrides native browser APIs with spoofed values
-4. Website thinks you're a different user
-5. Trackers can't build a consistent profile
-
-### Is This Legal?
-**Yes.** GhostLayer:
-- Doesn't hack or break into systems
-- Only modifies data sent to trackers
-- Protects your privacy (legal right)
-- Similar to using a VPN or Tor
-
----
-
-## 📊 Roadmap
-
-### v1.1 (Q2 2026)
-- [ ] Firefox support
-- [ ] Multiple email providers
-- [ ] Custom fingerprint profiles
-- [ ] Export/Import settings
-
-### v1.2 (Q3 2026)
-- [ ] Geo-location spoofing
-- [ ] Cookie auto-deletion
-- [ ] Advanced tracker blocking
-- [ ] Browser extension for Edge/Safari
-
-### v2.0 (Q4 2026)
-- [ ] AI-powered profile generator
-- [ ] Team/Enterprise plans
-- [ ] Custom domain emails
-- [ ] Mobile app
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how:
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add amazing feature'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open a Pull Request**
-
-### Development Guidelines
-- Follow existing code style
-- Test all changes thoroughly
-- Update documentation
-- Add comments for complex logic
-
----
-
-## 📝 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **1secmail** - Temporary email API
-- **BrowserLeaks** - Fingerprinting research
-- **Privacy Community** - Inspiration and testing
-
----
-
-## 📧 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ghostlayer/issues)
-- **Email**: support@ghostlayer.com
-- **Twitter**: [@GhostLayerApp](https://twitter.com/ghostlayerapp)
+* **GitHub Sponsors**: [santoshvandari](https://github.com/sponsors/santoshvandari)
+* **Ko-fi**: [santoshvandari](https://ko-fi.com/santoshvandari)
+* **Buy Me a Coffee**: [santoshvandari](https://www.buymeacoffee.com/santoshvandari)
 
 ---
 
@@ -329,8 +154,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Take back your digital footprint. Go Ghost.** 👻
 
-Made with 💜 by the GhostLayer Team
-
-[⬆ Back to Top](#-ghostlayer-ai-privacy--burner-identity)
+[⬆ Back to Top](https://www.google.com/search?q=%23-ghostlayer-ai-privacy--burner-identity)
 
 </div>
+
+---
