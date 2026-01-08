@@ -45,4 +45,4 @@ We may update our Privacy Policy from time to time. We will notify you of any ch
 If you have any questions about this Privacy Policy, please contact us via our GitHub repository or support email:
 
 *   **GitHub:** [https://github.com/santoshvandari/GhostLayer](https://github.com/santoshvandari/GhostLayer)
-*   **Email:** support@ghostlayer.com (Replace with actual email)
+*   **Email:** 
