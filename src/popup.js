@@ -35,6 +35,64 @@ document.addEventListener('DOMContentLoaded', async () => {
   let checkInboxInterval = null;
   
   // ============================================
+  // HELPERS
+  // ============================================
+
+  function createSvg(width, height, pathData, isLoader = false) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+
+    if (isLoader) {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", "12"); circle.setAttribute("cy", "12"); circle.setAttribute("r", "10");
+      circle.setAttribute("stroke-opacity", "0.3");
+      svg.appendChild(circle);
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M12 2 A 10 10 0 0 1 22 12");
+      path.setAttribute("stroke-linecap", "round");
+      
+      const animate = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
+      animate.setAttribute("attributeName", "transform");
+      animate.setAttribute("type", "rotate");
+      animate.setAttribute("from", "0 12 12");
+      animate.setAttribute("to", "360 12 12");
+      animate.setAttribute("dur", "1s");
+      animate.setAttribute("repeatCount", "indefinite");
+      path.appendChild(animate);
+      svg.appendChild(path);
+    } else if (Array.isArray(pathData)) {
+        pathData.forEach(d => {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", d.tag || "path");
+            Object.entries(d.attr).forEach(([k, v]) => el.setAttribute(k, v));
+            svg.appendChild(el);
+        });
+    } else {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathData);
+      svg.appendChild(path);
+    }
+    return svg;
+  }
+
+  function setButtonState(btn, text, iconType = 'loader', iconData = null) {
+    btn.textContent = '';
+    let icon;
+    if (iconType === 'loader') {
+      icon = createSvg(20, 20, null, true);
+    } else {
+      icon = createSvg(iconType === 'check' ? 16 : 20, iconType === 'check' ? 16 : 20, iconData);
+    }
+    btn.appendChild(icon);
+    btn.appendChild(document.createTextNode(' ' + text));
+  }
+
+  // ============================================
   // LOAD STATS
   // ============================================
   
@@ -70,11 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadSettings() {
     try {
       const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning']);
-      
       fingerprintToggle.checked = settings.fingerprintSpoofing !== false;
       dataPoisoningToggle.checked = settings.dataPoisoning !== false;
-      
-      console.log('[GhostLayer] Settings loaded - All features enabled!');
     } catch (error) {
       console.error('[GhostLayer] Failed to load settings:', error);
     }
@@ -89,12 +144,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = await chrome.storage.local.get(['emailHistory']);
       const history = result.emailHistory || [];
       
+      emailHistory.textContent = '';
       if (history.length === 0) {
-        emailHistory.innerHTML = '<div class="empty-state">No emails generated yet</div>';
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No emails generated yet';
+        emailHistory.appendChild(empty);
         return;
       }
       
-      // If no current email is selected, try to load it from storage or default to history
+      // Load current email if needed
       if (!currentEmail) {
         const stored = await chrome.storage.local.get(['activeEmail']);
         if (stored.activeEmail) {
@@ -105,73 +164,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (currentEmail) {
           emailValue.textContent = currentEmail.email;
-          
-          // Update provider tag
           const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
           providerTag.className = 'provider-tag';
           providerTag.textContent = currentEmail.provider || '1secmail';
           if (!document.querySelector('.provider-tag')) {
              emailValue.parentNode.appendChild(providerTag);
           }
-          
           emailDisplay.classList.remove('hidden');
         }
       }
       
-      emailHistory.innerHTML = history.slice(0, 5).map(item => {
+      history.slice(0, 5).forEach(item => {
         const date = new Date(item.createdAt);
         const timeAgo = getTimeAgo(date);
         
-        return `
-          <div class="history-item" data-email="${item.email}">
-            <div class="history-email-row">
-              <span class="history-email">${item.email}</span>
-              <span class="history-provider">${item.provider || '1secmail'}</span>
-            </div>
-            <div class="history-date">${timeAgo}</div>
-          </div>
-        `;
-      }).join('');
-
-      // Add click handlers to history items to switch active email
-      document.querySelectorAll('.history-item').forEach(item => {
-        item.addEventListener('click', async () => {
-          const email = item.dataset.email;
-          const selected = history.find(h => h.email === email);
-          if (selected) {
-            currentEmail = selected;
-            
-            // Save as active email
-            await chrome.storage.local.set({ activeEmail: currentEmail });
-            
-            emailValue.textContent = currentEmail.email;
-            
-            // Update provider tag
-            const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
-            providerTag.className = 'provider-tag';
-            providerTag.textContent = currentEmail.provider || '1secmail';
-            if (!document.querySelector('.provider-tag')) {
-               emailValue.parentNode.appendChild(providerTag);
-            }
-
-            emailDisplay.classList.remove('hidden');
-            inboxDisplay.classList.add('hidden');
-            if (checkInboxInterval) {
-              clearInterval(checkInboxInterval);
-              checkInboxInterval = null;
-            }
-            console.log('[GhostLayer] Switched email to:', currentEmail.email);
-          }
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.dataset.email = item.email;
+        
+        const row = document.createElement('div');
+        row.className = 'history-email-row';
+        
+        const emailSpan = document.createElement('span');
+        emailSpan.className = 'history-email';
+        emailSpan.textContent = item.email;
+        
+        const providerSpan = document.createElement('span');
+        providerSpan.className = 'history-provider';
+        providerSpan.textContent = item.provider || '1secmail';
+        
+        row.appendChild(emailSpan);
+        row.appendChild(providerSpan);
+        
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'history-date';
+        dateDiv.textContent = timeAgo;
+        
+        div.appendChild(row);
+        div.appendChild(dateDiv);
+        
+        div.addEventListener('click', async () => {
+          currentEmail = item;
+          await chrome.storage.local.set({ activeEmail: currentEmail });
+          emailValue.textContent = currentEmail.email;
+          const tag = document.querySelector('.provider-tag');
+          if (tag) tag.textContent = currentEmail.provider || '1secmail';
+          emailDisplay.classList.remove('hidden');
+          inboxDisplay.classList.add('hidden');
+          if (checkInboxInterval) { clearInterval(checkInboxInterval); checkInboxInterval = null; }
         });
+        
+        emailHistory.appendChild(div);
       });
     } catch (error) {
-      console.error('[GhostLayer] Failed to load email history:', error);
+      console.error('[GhostLayer] Failed to load history:', error);
     }
   }
   
   function getTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
-    
     if (seconds < 60) return 'Just now';
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
@@ -184,90 +235,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   generateEmailBtn.addEventListener('click', async () => {
     try {
-      // Show loading state
-      generateEmailBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" stroke-opacity="0.3"/>
-          <path d="M12 2 A 10 10 0 0 1 22 12" stroke-linecap="round">
-            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-          </path>
-        </svg>
-        <span>Generating...</span>
-      `;
+      setButtonState(generateEmailBtn, 'Generating...');
       generateEmailBtn.disabled = true;
       
       const response = await chrome.runtime.sendMessage({ action: 'generateEmail' });
       
       if (response && response.success) {
         currentEmail = response;
-        
-        // Save as active email
         await chrome.storage.local.set({ activeEmail: currentEmail });
-        
         emailValue.textContent = response.email;
         emailDisplay.classList.remove('hidden');
         inboxDisplay.classList.add('hidden');
         
-        // Update provider tag
-        const providerTag = document.querySelector('.provider-tag') || document.createElement('span');
-        providerTag.className = 'provider-tag';
-        providerTag.textContent = response.provider;
-        if (!document.querySelector('.provider-tag')) {
-           emailValue.parentNode.appendChild(providerTag);
-        }
+        const tag = document.querySelector('.provider-tag') || document.createElement('span');
+        tag.className = 'provider-tag';
+        tag.textContent = response.provider;
+        if (!document.querySelector('.provider-tag')) emailValue.parentNode.appendChild(tag);
         
-        // Update stats and history
         await loadStats();
         await loadEmailHistory();
         
-        // Success animation
         generateEmailBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-        generateEmailBtn.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>Email Generated!</span>
-        `;
+        setButtonState(generateEmailBtn, 'Email Generated!', 'check', "M20 6 9 17 4 12");
         
         setTimeout(() => {
           generateEmailBtn.style.background = '';
-          generateEmailBtn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            <span>Generate Burner Email</span>
-          `;
+          setButtonState(generateEmailBtn, 'Generate Burner Email', 'plus', [
+            {tag: 'circle', attr: {cx: '12', cy: '12', r: '10'}},
+            {tag: 'line', attr: {x1: '12', y1: '8', x2: '12', y2: '16'}},
+            {tag: 'line', attr: {x1: '8', y1: '12', x2: '16', y2: '12'}}
+          ]);
           generateEmailBtn.disabled = false;
         }, 2000);
       } else {
         throw new Error(response?.error || 'Email generation failed');
       }
     } catch (error) {
-      console.error('[GhostLayer] Email generation error:', error);
-      
-      // Error state
       generateEmailBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-      generateEmailBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="15" y1="9" x2="9" y2="15"/>
-          <line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        <span>Failed. Try Again</span>
-      `;
-      
+      setButtonState(generateEmailBtn, 'Failed. Try Again', 'error', [
+        {tag: 'circle', attr: {cx: '12', cy: '12', r: '10'}},
+        {tag: 'line', attr: {x1: '15', y1: '9', x2: '9', y2: '15'}},
+        {tag: 'line', attr: {x1: '9', y1: '9', x2: '15', y2: '15'}}
+      ]);
       setTimeout(() => {
         generateEmailBtn.style.background = '';
-        generateEmailBtn.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-          </svg>
-          <span>Generate Burner Email</span>
-        `;
+        setButtonState(generateEmailBtn, 'Generate Burner Email', 'plus', [
+            {tag: 'circle', attr: {cx: '12', cy: '12', r: '10'}},
+            {tag: 'line', attr: {x1: '12', y1: '8', x2: '12', y2: '16'}},
+            {tag: 'line', attr: {x1: '8', y1: '12', x2: '16', y2: '12'}}
+        ]);
         generateEmailBtn.disabled = false;
       }, 2000);
     }
@@ -278,26 +294,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ============================================
   
   copyEmailBtn.addEventListener('click', async () => {
+    if (!currentEmail) return;
     try {
       await navigator.clipboard.writeText(currentEmail.email);
-      
-      // Success feedback
-      const originalHTML = copyEmailBtn.innerHTML;
-      copyEmailBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Copied!
-      `;
+      const originalContent = Array.from(copyEmailBtn.childNodes);
+      setButtonState(copyEmailBtn, 'Copied!', 'check', "M20 6 9 17 4 12");
       copyEmailBtn.style.background = 'rgba(16, 185, 129, 0.4)';
-      
       setTimeout(() => {
-        copyEmailBtn.innerHTML = originalHTML;
+        copyEmailBtn.textContent = '';
+        originalContent.forEach(node => copyEmailBtn.appendChild(node));
         copyEmailBtn.style.background = '';
       }, 2000);
-    } catch (error) {
-      console.error('[GhostLayer] Copy failed:', error);
-    }
+    } catch (e) {}
   });
   
   // ============================================
@@ -306,231 +314,94 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   checkInboxBtn.addEventListener('click', async () => {
     if (!currentEmail) return;
-    
     try {
-      checkInboxBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" stroke-opacity="0.3"/>
-          <path d="M12 2 A 10 10 0 0 1 22 12" stroke-linecap="round">
-            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-          </path>
-        </svg>
-        Checking...
-      `;
-      
-      const response = await chrome.runtime.sendMessage({
-        action: 'checkInbox',
-        emailData: currentEmail
-      });
-      
-      if (!response || !response.success) {
-        throw new Error(response ? response.error : 'Unknown error');
-      }
+      setButtonState(checkInboxBtn, 'Checking...', 'loader');
+      const response = await chrome.runtime.sendMessage({ action: 'checkInbox', emailData: currentEmail });
       
       if (response && response.success) {
         displayMessages(response.messages);
         inboxDisplay.classList.remove('hidden');
-        
-        // Show last updated time
         const now = new Date();
         const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
-        document.querySelector('.inbox-header span').innerHTML = `Inbox <small style="opacity: 0.6; font-size: 10px; margin-left: 8px;">(Refreshed: ${timeStr})</small>`;
-        
-        // Manual Refresh only to avoid 403 blocks
-        if (checkInboxInterval) {
-          clearInterval(checkInboxInterval);
-          checkInboxInterval = null;
-        }
+        const header = document.querySelector('.inbox-header span');
+        header.textContent = 'Inbox ';
+        const small = document.createElement('small');
+        small.style.opacity = '0.6'; small.style.fontSize = '10px'; small.style.marginLeft = '8px';
+        small.textContent = `(Refreshed: ${timeStr})`;
+        header.appendChild(small);
+      } else {
+        throw new Error(response?.error || 'Check failed');
       }
-      
-      checkInboxBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-        </svg>
-        Refresh Inbox
-      `;
+      setButtonState(checkInboxBtn, 'Refresh Inbox', 'refresh', "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15");
     } catch (error) {
-      console.error('[GhostLayer] Inbox check failed:', error); // Removed in future
+      const header = document.querySelector('.inbox-header span');
+      header.textContent = '';
+      const err = document.createElement('span');
+      err.style.color = '#ef4444'; err.style.fontSize = '10px';
+      err.textContent = error.message.includes('Cooling down') ? error.message : 'Rate limited.';
+      header.appendChild(err);
       
-      const isThrottle = error.message.includes('Cooling down');
-      const is403 = error.message.includes('403');
-      
-      let displayMsg = isThrottle ? error.message : 'Rate limited by server.';
-      if (is403) displayMsg = 'Server busy. Try new email.';
-      
-      document.querySelector('.inbox-header span').innerHTML = `<span style="color: #ef4444; font-size: 10px;">${displayMsg}</span>`;
-      
-      checkInboxBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        ${isThrottle ? 'Wait...' : (is403 ? 'Server Blocked' : 'Try Again')}
-      `;
-      
-      if (isThrottle) {
-        checkInboxBtn.disabled = true;
-        setTimeout(() => {
-          checkInboxBtn.disabled = false;
-          checkInboxBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-            </svg>
-            Refresh Inbox
-          `;
-        }, 3000); // Shorter visual lock
-      }
+      setButtonState(checkInboxBtn, 'Try Again', 'error', [
+        {tag: 'circle', attr: {cx: '12', cy: '12', r: '10'}},
+        {tag: 'line', attr: {x1: '15', y1: '9', x2: '9', y2: '15'}},
+        {tag: 'line', attr: {x1: '9', y1: '9', x2: '15', y2: '15'}}
+      ]);
     }
   });
   
-  async function checkInbox(emailData) {
-    try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'checkInbox',
-        emailData: emailData
-      });
-      
-      if (response && response.success) {
-        displayMessages(response.messages);
-      } else {
-        throw new Error(response ? response.error : 'Unknown error');
-      }
-    } catch (error) {
-      console.error('[GhostLayer] Auto inbox check failed:', error);
-    }
-  }
-  
   function displayMessages(messages) {
+    messageList.textContent = '';
     if (!messages || messages.length === 0) {
-      messageList.innerHTML = '<div class="empty-state">No messages yet. Waiting for email...</div>';
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'No messages yet.';
+      messageList.appendChild(empty);
       return;
     }
     
-    // Check if new messages arrived
-    const currentCount = messageList.querySelectorAll('.message-item').length;
-    
-    messageList.innerHTML = messages.map(msg => {
-      // Handle both "YYYY-MM-DD HH:MM:SS" and ISO formats
-      let datePart = msg.date;
-      if (msg.date.includes(' ')) {
-        datePart = msg.date.split(' ')[1].substring(0, 5); // HH:MM
-      } else if (msg.date.includes('T')) {
-        const d = new Date(msg.date);
-        datePart = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-      }
+    messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'message-item';
+      div.dataset.id = msg.id;
       
-      return `
-        <div class="message-item" data-id="${msg.id}">
-          <div class="message-header-row">
-            <span class="message-from">${msg.from}</span>
-            <span class="message-time">${datePart}</span>
-          </div>
-          <div class="message-subject">${msg.subject}</div>
-        </div>
-      `;
-    }).join('');
-    
-    // Play subtle notification if new messages arrived
-    if (currentCount > 0 && messages.length > currentCount) {
-       console.log('[GhostLayer] New message received!');
-    }
-    
-    // Add click handlers
-    document.querySelectorAll('.message-item').forEach(item => {
-      item.addEventListener('click', () => {
-        readMessage(item.dataset.id);
-      });
+      const header = document.createElement('div');
+      header.className = 'message-header-row';
+      const from = document.createElement('span'); from.className = 'message-from'; from.textContent = msg.from;
+      const time = document.createElement('span'); time.className = 'message-time'; time.textContent = msg.date.includes(' ') ? msg.date.split(' ')[1].substring(0, 5) : 'Recently';
+      header.appendChild(from); header.appendChild(time);
+      
+      const sub = document.createElement('div'); sub.className = 'message-subject'; sub.textContent = msg.subject;
+      div.appendChild(header); div.appendChild(sub);
+      
+      div.addEventListener('click', () => readMessage(msg.id));
+      messageList.appendChild(div);
     });
   }
   
   async function readMessage(messageId) {
     if (!currentEmail) return;
-    
     try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'readEmail',
-        emailData: currentEmail,
-        messageId: messageId
-      });
-      
-      if (response && response.success) {
-        const msg = response.message;
-        
-        // Populate and show modal
-        modalFrom.textContent = `From: ${msg.from}`;
-        modalSubject.textContent = msg.subject;
-        modalBody.innerHTML = msg.htmlBody || msg.textBody || 'No content';
-        
+      const resp = await chrome.runtime.sendMessage({ action: 'readEmail', emailData: currentEmail, messageId });
+      if (resp && resp.success) {
+        modalFrom.textContent = `From: ${resp.message.from}`;
+        modalSubject.textContent = resp.message.subject;
+        modalBody.textContent = '';
+        const doc = new DOMParser().parseFromString(resp.message.htmlBody || resp.message.textBody || '', 'text/html');
+        Array.from(doc.body.childNodes).forEach(node => modalBody.appendChild(document.importNode(node, true)));
         messageModal.classList.remove('hidden');
-      } else {
-        throw new Error(response ? response.error : 'Unknown error');
       }
-    } catch (error) {
-      console.error('[GhostLayer] Message read failed:', error);
-    }
+    } catch (e) {}
   }
 
-  // Close Modal Listeners
-  closeModalBtn.addEventListener('click', () => {
-    messageModal.classList.add('hidden');
-  });
+  // Basic listeners
+  closeModalBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
+  closeInboxBtn.addEventListener('click', () => inboxDisplay.classList.add('hidden'));
+  fingerprintToggle.addEventListener('change', () => chrome.storage.local.set({ fingerprintSpoofing: fingerprintToggle.checked }));
+  dataPoisoningToggle.addEventListener('change', () => chrome.storage.local.set({ dataPoisoning: dataPoisoningToggle.checked }));
 
-  // Close modal on click outside
-  messageModal.addEventListener('click', (e) => {
-    if (e.target === messageModal) {
-      messageModal.classList.add('hidden');
-    }
-  });
-
-  // Close modal on escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !messageModal.classList.contains('hidden')) {
-      messageModal.classList.add('hidden');
-    }
-  });
-  
-  closeInboxBtn.addEventListener('click', () => {
-    inboxDisplay.classList.add('hidden');
-    if (checkInboxInterval) {
-      clearInterval(checkInboxInterval);
-      checkInboxInterval = null;
-    }
-  });
-  
-  // ============================================
-  // SETTINGS
-  // ============================================
-  
-  fingerprintToggle.addEventListener('change', async () => {
-    try {
-      await chrome.storage.local.set({ 
-        fingerprintSpoofing: fingerprintToggle.checked 
-      });
-      console.log('[GhostLayer] Fingerprint spoofing:', fingerprintToggle.checked);
-    } catch (error) {
-      console.error('[GhostLayer] Failed to save setting:', error);
-    }
-  });
-  
-  dataPoisoningToggle.addEventListener('change', async () => {
-    try {
-      await chrome.storage.local.set({ 
-        dataPoisoning: dataPoisoningToggle.checked 
-      });
-      console.log('[GhostLayer] Data poisoning:', dataPoisoningToggle.checked);
-    } catch (error) {
-      console.error('[GhostLayer] Failed to save setting:', error);
-    }
-  });
-  
-  // ============================================
-  // INITIALIZATION
-  // ============================================
-  
+  // Init
   await loadStats();
   await loadSettings();
   await loadEmailHistory();
-  
-  // Refresh stats every 5 seconds
   setInterval(loadStats, 5000);
 });
