@@ -26,7 +26,6 @@ export async function startDataPoisoning() {
   
   await chrome.storage.local.set({ stats: currentStats });
   
-  console.log(`[GhostLayer] Data Poisoning Active: ${poisonCount} sites simulated`);
 }
 
 export function setupPoisoningAlarm() {

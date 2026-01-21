@@ -60,7 +60,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
       
     default:
-      console.warn(`[GhostLayer] Unknown action: ${request.action}`);
       break;
   }
 });
@@ -82,7 +81,5 @@ chrome.runtime.onInstalled.addListener(async () => {
   const profile = generateRandomProfile();
   await chrome.storage.local.set({ currentProfile: profile });
   
-  console.log('[GhostLayer] Extension installed successfully - All features enabled!');
 });
 
-console.log('[GhostLayer] Background service worker loaded');

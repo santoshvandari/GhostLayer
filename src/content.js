@@ -1,7 +1,6 @@
 // GhostLayer Content Script
 // Runs on every page to inject burner emails and block trackers
 
-console.log('[GhostLayer] Content script loaded');
 
 // ============================================
 // 1. INJECT FINGERPRINT SPOOFING SCRIPT
@@ -9,6 +8,12 @@ console.log('[GhostLayer] Content script loaded');
 
 (async function injectSpoofing() {
   try {
+    // Check if fingerprint spoofing is enabled
+    const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning']);
+    if (settings.fingerprintSpoofing === false) {
+      return;
+    }
+    
     // Get current profile and noise from background
     const response = await chrome.runtime.sendMessage({ action: 'getProfile' });
     const noiseResponse = await chrome.runtime.sendMessage({ action: 'getTelemetryNoise' });
@@ -19,6 +24,8 @@ console.log('[GhostLayer] Content script loaded');
       
       if (noiseResponse && noiseResponse.noise) {
         document.documentElement.setAttribute('data-ghostlayer-noise', JSON.stringify(noiseResponse.noise));
+        // Pass data poisoning setting
+        document.documentElement.setAttribute('data-ghostlayer-poisoning-enabled', settings.dataPoisoning !== false ? 'true' : 'false');
       }
       
       // Inject the main spoofing script
@@ -27,7 +34,6 @@ console.log('[GhostLayer] Content script loaded');
       
       (document.head || document.documentElement).appendChild(spoofingScript);
       
-      console.log('[GhostLayer] Fingerprint spoofing injected via bridge');
     }
   } catch (error) {
     console.error('[GhostLayer] Failed to inject spoofing:', error);
@@ -35,8 +41,9 @@ console.log('[GhostLayer] Content script loaded');
 })();
 
 // ============================================
-// 2. TRACKER DETECTION & BLOCKING
+// 2. TRACKER DETECTION (for stats logging)
 // ============================================
+// Note: Actual blocking is done in background.js via webRequest API
 
 const TRACKER_PATTERNS = [
   /google-analytics\.com/i,
@@ -55,26 +62,20 @@ const TRACKER_PATTERNS = [
 
 function detectTrackers() {
   const scripts = document.querySelectorAll('script[src]');
-  let blockCount = 0;
+  let detectCount = 0;
   
   scripts.forEach(script => {
     const src = script.getAttribute('src');
     if (src && TRACKER_PATTERNS.some(pattern => pattern.test(src))) {
-      console.log('[GhostLayer] Detected tracker (Poisoning Targets):', src);
-      // script.remove(); // DISABLED: We don't block, we poison via injected.js
-      blockCount++;
+      detectCount++;
     }
   });
   
-  if (blockCount > 0) {
-    chrome.runtime.sendMessage({ 
-      action: 'trackerBlocked',
-      count: blockCount 
-    });
-  }
+  // Note: This is just for detection stats
+  // Actual blocking is handled by webRequest in background.js
 }
 
-// Run tracker detection on page load and DOM changes
+// Run tracker detection on page load
 detectTrackers();
 
 const observer = new MutationObserver(detectTrackers);
@@ -250,4 +251,3 @@ window.addEventListener('resize', () => {
   }
 });
 
-console.log('[GhostLayer] Content script initialized');
