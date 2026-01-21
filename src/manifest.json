@@ -23,8 +23,6 @@
     "alarms"
   ],
   "host_permissions": [
-    "https://*.1secmail.com/*",
-    "https://1secmail.com/*",
     "<all_urls>"
   ],
   "background": {
