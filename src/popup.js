@@ -1,7 +1,6 @@
 // GhostLayer Popup Script
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[GhostLayer] Popup initialized');
   
   // ============================================
   // ELEMENTS
@@ -111,14 +110,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   function animateNumber(element, target) {
     const current = parseInt(element.textContent) || 0;
-    const increment = Math.ceil((target - current) / 20);
+    const duration = 500; // Animation duration in milliseconds
+    const steps = 20; // Number of animation steps
+    const stepDuration = duration / steps;
+    const increment = Math.ceil((target - current) / steps);
     
-    if (current < target) {
-      element.textContent = Math.min(current + increment, target);
-      setTimeout(() => animateNumber(element, target), 50);
-    } else {
-      element.textContent = target;
-    }
+    let currentValue = current;
+    let step = 0;
+    
+    const timer = setInterval(() => {
+      step++;
+      currentValue = current + Math.floor(((target - current) * step) / steps);
+      
+      if (step >= steps || currentValue >= target) {
+        element.textContent = target;
+        clearInterval(timer);
+      } else {
+        element.textContent = currentValue;
+      }
+    }, stepDuration);
   }
   
   // ============================================

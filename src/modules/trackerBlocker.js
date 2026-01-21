@@ -44,10 +44,114 @@ function getRandomEvent() {
   return events[Math.floor(Math.random() * events.length)];
 }
 
-// Future expansion: Add declarativeNetRequest or webRequest listeners here
-export function setupTrackerBlocker() {
-  console.log('[GhostLayer] Tracker blocker module initialized');
-  
-  // Logic moved to background.js central dispatcher
-}
 
+// Comprehensive list of tracker domains to block across ALL websites
+const TRACKER_DOMAINS = [
+  // === Analytics Trackers ===
+  '*://*.google-analytics.com/*',
+  '*://*.googletagmanager.com/*',
+  '*://www.google-analytics.com/*',
+  '*://ssl.google-analytics.com/*',
+  '*://*.analytics.google.com/*',
+  '*://stats.g.doubleclick.net/*',
+  '*://*.clarity.ms/*',
+  '*://*.hotjar.com/*',
+  '*://*.mixpanel.com/*',
+  '*://api.segment.com/*',
+  '*://api.segment.io/*',
+  '*://cdn.segment.com/*',
+  '*://*.amplitude.com/*',
+  '*://*.fullstory.com/*',
+  '*://*.mouseflow.com/*',
+  '*://*.inspectlet.com/*',
+  '*://*.crazyegg.com/*',
+  '*://*.heap.io/*',
+  '*://*.logrocket.com/*',
+  '*://*.logrocket.io/*',
+  
+  // === Advertising Networks ===
+  '*://*.doubleclick.net/*',
+  '*://*.googlesyndication.com/*',
+  '*://*.googleadservices.com/*',
+  '*://*.google.com/pagead/*',
+  '*://*.adsystem.com/*',
+  '*://*.advertising.com/*',
+  '*://*.2mdn.net/*',
+  '*://*.adnxs.com/*',
+  '*://*.adsafeprotected.com/*',
+  '*://*.adroll.com/*',
+  '*://*.outbrain.com/*',
+  '*://*.taboola.com/*',
+  '*://*.revcontent.com/*',
+  
+  // === Social Media Trackers ===
+  '*://www.facebook.com/tr*',
+  '*://www.facebook.com/tr/*',
+  '*://*.connect.facebook.net/*',
+  '*://connect.facebook.net/*',
+  '*://*.facebook.net/*/fbevents.js*',
+  '*://*.analytics.twitter.com/*',
+  '*://*.ads-twitter.com/*',
+  '*://platform.twitter.com/widgets/*',
+  '*://static.ads-twitter.com/*',
+  '*://*.linkedin.com/px/*',
+  '*://www.linkedin.com/analytics/*',
+  '*://px.ads.linkedin.com/*',
+  '*://*.pinterest.com/ct/*',
+  '*://ct.pinterest.com/*',
+  '*://*.tiktok.com/i18n/pixel/*',
+  
+  // === Behavioral Tracking ===
+  '*://*.bat.bing.com/*',
+  '*://*.quantserve.com/*',
+  '*://*.scorecardresearch.com/*',
+  '*://*.luckyorange.com/*',
+  '*://*.smartlook.com/*',
+  '*://*.sessioncam.com/*',
+  '*://*.clicktale.net/*',
+  '*://*.livechatinc.com/*',
+  '*://*.intercom.io/widget/*',
+  
+  // === Fingerprinting Services ===
+  '*://*.bugsnag.com/*',
+  '*://*.sentry.io/*',
+  '*://*.newrelic.com/*',
+  '*://*.nr-data.net/*',
+  '*://*.datadoghq.com/*',
+  
+  // === Common CDN Trackers ===
+  '*://bat.bing.com/*',
+  '*://www.googletagservices.com/*',
+  '*://pagead2.googlesyndication.com/*',
+  '*://tpc.googlesyndication.com/*',
+  
+  // === Affiliate & Marketing ===
+  '*://*.shareasale.com/*',
+  '*://*.cj.com/*',
+  '*://*.avantlink.com/*',
+  '*://*.impact.com/*',
+  '*://*.awin1.com/*',
+  
+  // === Generic Patterns ===
+  '*://*/collect*',
+  '*://*/analytics*',
+  '*://*/tracking*',
+  '*://*/tracker*'
+];
+
+// Setup tracker blocking using webRequest API
+export function setupTrackerBlocker() {
+  
+  // Block tracker requests
+  chrome.webRequest.onBeforeRequest.addListener(
+    function(details) {
+      
+      // Increment tracker count asynchronously
+      handleTrackerBlocked(1);
+      
+      return { cancel: true };
+    },
+    { urls: TRACKER_DOMAINS },
+    ['blocking']
+  );
+}

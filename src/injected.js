@@ -25,11 +25,9 @@
   }
   
   if (!PROFILE) {
-    console.warn('[GhostLayer] No profile found, skipping spoofing');
     return;
   }
   
-  console.log('[GhostLayer] Injecting fingerprint spoofing...');
   
   // ============================================
   // NAVIGATOR SPOOFING
@@ -193,7 +191,11 @@
     }
   }
   
-  if (NOISE) {
+  // Check if data poisoning is enabled
+  const poisoningEnabled = document.documentElement.getAttribute('data-ghostlayer-poisoning-enabled');
+  document.documentElement.removeAttribute('data-ghostlayer-poisoning-enabled');
+  
+  if (NOISE && poisoningEnabled === 'true') {
     // Active poisoning loop
     setInterval(() => {
       // Poison Google Tag Manager / Analytics
@@ -228,11 +230,8 @@
       }
     }, 10000); // Check every 10 seconds
     
-    console.log('[GhostLayer] Tracker data poisoning active');
   }
 
-  
-  console.log('[GhostLayer] Fingerprint spoofing active');
   
   // Clean up: remove the script tag after execution
   if (document.currentScript && document.currentScript.parentNode) {
