@@ -1,16 +1,8 @@
-# 👻 GhostLayer: AI Privacy & Burner Identity
+# GhostLayer: AI Privacy & Burner Identity
 
-<div align="center">
+## Introduction
+GhostLayer is a browser extension that enhances your privacy by spoofing your fingerprint and poisoning your data. It works with the modern web, not against it. It also provides instant burner emails with built-in inbox.
 
-**Stop hiding. Start confusing.**
-
-*Next-generation privacy extension that actively fights back against digital tracking.*
-
-[Features](https://www.google.com/search?q=%23-features) • [Installation](https://www.google.com/search?q=%23-installation) • [Usage](https://www.google.com/search?q=%23-usage) • [Development](https://www.google.com/search?q=%23-development) • [Roadmap](https://www.google.com/search?q=%23-roadmap)
-
-</div>
-
----
 
 ## Why GhostLayer?
 
@@ -49,7 +41,7 @@ Randomizes your digital fingerprint for every session:
 * **Built-in Inbox** - View verification codes directly in the extension popup.
 * **Real-time Updates** - Auto-refreshing inbox for instant access.
 
-### **AI Data Poisoning**
+### **Data Poisoning**
 
 * Simulates background browsing activity every 15 minutes.
 * Confuses ad trackers with fake interests and search patterns.
@@ -58,17 +50,26 @@ Randomizes your digital fingerprint for every session:
 ### **Performance & Privacy**
 
 * **Manifest V3** - Built for maximum efficiency and security.
-* **Zero Logs** - No sign-up required; no data ever leaves your local machine.
+* **No Logs** - No sign-up required; no data ever leaves your local machine.
 * **Open Source** - Audit the code yourself for full transparency.
 
 ---
 
 ## Installation
 
-### From Chrome Web Store (Recommended)
-
+### For Chrome Browser
 1. Visit the [Chrome Web Store](#) (Coming Soon).
 2. Click **"Add to Chrome"**.
+3. Click the GhostLayer icon in your toolbar to begin.
+
+### For Microsoft Edge Browser
+1. Visit the [Edge Web Store](https://microsoftedge.microsoft.com/addons/detail/ghostlayer-ai-privacy-/hpkbbjgnibpilndeidpoadbjaiooadch).
+2. Click **"Add to Edge"**.
+3. Click the GhostLayer icon in your toolbar to begin.
+
+### For Firefox Browser
+1. Visit the [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/ghostlayer/).
+2. Click **"Add to Firefox"**.
 3. Click the GhostLayer icon in your toolbar to begin.
 
 ### Manual Installation (Developer Mode)
@@ -91,57 +92,39 @@ cd GhostLayer
 * Select the `src` folder within the project directory.
 
 
-
----
-
-## Usage
-
-### Everything is FREE!
-
-**v1.0 Release:** All features are currently unlocked with no limitations. No ads, no upsells, just privacy.
-
-1. **Enable Features:** Click the GhostLayer icon. Both toggles (Privacy & Poisoning) are ON by default.
-2. **Generate Email:** Click the purple ghost icon inside any email input field on the web.
-3. **Check Inbox:** Use the extension popup to view incoming mail or verification codes.
-4. **Monitor Stats:** Track how many fingerprints have been spoofed and how much "poison" has been injected in real-time.
-
----
-
-## 🛠 Development
+## Development
 
 ### Tech Stack
 
 * **Manifest V3** - Modern extension architecture.
 * **Vanilla JavaScript** - Lightweight, dependency-free performance.
 * **APIs** - Mailtm, Guerrilla, and Mailnesia for temporary mail.
-* **CSS3** - Custom "Cybersecurity Dark" theme.
 
 ### Project Structure
 
 ```text
 GhostLayer/
-├── src/
-│   ├── manifest.json       # Extension configuration
+├── src/ 
+|   |__manifest.json       # Extension configuration
 │   ├── background.js        # Service worker (Alarms & APIs)
 │   ├── content.js           # Content script (DOM interaction)
 │   ├── injected.js          # API Overrides (Fingerprinting)
 │   ├── popup.html/js/css    # UI Components
 │   └── modules/             
-│       ├── fingerprint.js   # Spoofing logic
-│       ├── emailManager.js  # API integration
-│       └── dataPoisoner.js  # Noise generation logic
+│   |   ├── fingerprint.js   # Spoofing logic
+│   |   ├── emailManager.js  # API integration
+│   |   └── dataPoisoner.js  # Noise generation logic
+│   |__ icons/               # Extension icons
 └── README.md
-
 ```
-
 ---
 
 
 ## Contributing
-We welcome contributions! If you'd like to contribute to this Flutter Package Project, please check out our [Contribution Guidelines](Contributing.md).
+We welcome contributions! If you'd like to contribute to this Browser Extension Project, please check out our [Contribution Guidelines](Contributing.md).
 
 ## Code of Conduct
-Please review our [Code of Conduct](Code_of_Conduct.md) before participating in this app.
+Please review our [Code of Conduct](Code_of_Conduct.md) before participating in this extension development.
 
 ## License
 This project is licensed under the MIT [License](LICENSE).
@@ -159,7 +142,5 @@ If GhostLayer helps you stay anonymous, consider supporting its development:
 <div align="center">
 
 **Take back your digital footprint. Go Ghost.** 👻
-
-[⬆ Back to Top](#ghostlayer-ai-privacy--burner-identity)
 
 </div>
