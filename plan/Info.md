@@ -96,7 +96,7 @@ Update your previous `manifest.json` file with these official details to match t
     "default_popup": "popup.html",
     "default_title": "GhostLayer Settings"
   },
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "tabs", "webRequest", "alarms"],
   "host_permissions": ["https://www.1secmail.com/api/*"],
   "background": {
     "service_worker": "background.js"

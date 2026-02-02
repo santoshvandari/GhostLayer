@@ -114,10 +114,14 @@ We require the following browser permissions to function properly:
 ### 6.1 Required Permissions
 *   **`storage`:** Save your settings, email history, and spoofing profiles locally
 *   **`activeTab`:** Read the current tab's URL and interact with the active page
-*   **`scripting`:** Inject fingerprint spoofing and data poisoning scripts into web pages
 *   **`tabs`:** Detect when pages load to apply privacy protections
-*   **`webRequest`:** Monitor network requests to detect tracking scripts
+*   **`webRequest`:** Monitor and block network requests from tracking scripts
 *   **`alarms`:** Schedule periodic data poisoning activities (every 15 minutes)
+
+### 6.2 Content Scripts & Web Accessible Resources
+*   **Content Scripts:** Automatically injected on all pages to detect email fields and inject spoofing scripts
+*   **Web Accessible Resources:** The `injected.js` script that overrides browser APIs for fingerprint spoofing
+*   **Note:** We use declarative content scripts (defined in manifest) rather than dynamic script injection for better transparency and security
 
 ### 6.2 Host Permissions
 *   **`<all_urls>`:** Required to inject privacy protection scripts on all websites you visit
