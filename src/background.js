@@ -6,16 +6,8 @@ import { setupPoisoningAlarm } from './modules/dataPoisoner.js';
 import { generateBurnerEmail, checkEmailInbox, readEmail } from './modules/emailManager.js';
 import { handleTrackerBlocked, setupTrackerBlocker, generateTelemetryNoise } from './modules/trackerBlocker.js';
 
-// ============================================
-// 1. INITIALIZATION & ALARMS
-// ============================================
-
 setupPoisoningAlarm();
 setupTrackerBlocker();
-
-// ============================================
-// 2. MESSAGE HANDLING
-// ============================================
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -64,15 +56,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// ============================================
-// 3. INSTALLATION EVENT
-// ============================================
-
 chrome.runtime.onInstalled.addListener(async () => {
-  // Set default settings - ALL FEATURES ARE FREE!
   await chrome.storage.local.set({
     fingerprintSpoofing: true,
-    dataPoisoning: true,  // Now enabled by default (free)
+    dataPoisoning: true,
     stats: { trackersBlocked: 0, emailsGenerated: 0, dataPoisoned: 0 },
     emailHistory: []
   });
@@ -82,4 +69,3 @@ chrome.runtime.onInstalled.addListener(async () => {
   await chrome.storage.local.set({ currentProfile: profile });
   
 });
-

@@ -76,8 +76,6 @@ export async function generateBurnerEmail() {
       });
       
       if (!createResponse.ok) {
-        const errText = await createResponse.text();
-        console.error('[GhostLayer] Mail.tm account creation failed:', errText);
         throw new Error('Mail.tm account creation failed');
       }
       
@@ -106,7 +104,6 @@ export async function generateBurnerEmail() {
       return { success: true, ...newEmailItem };
     }
   } catch (error) {
-    console.error('[GhostLayer] Email generation failed:', error);
     return { success: false, error: error.message };
   }
 }
@@ -189,7 +186,6 @@ export async function checkEmailInbox(emailData) {
       throw new Error('This email provider is currently unsupported or down.');
     }
   } catch (error) {
-    console.error('[GhostLayer] Inbox check failed:', error);
     return { success: false, error: error.message };
   }
 }
@@ -253,7 +249,6 @@ export async function readEmail(emailData, messageId) {
       throw new Error('This email provider is no longer supported.');
     }
   } catch (error) {
-    console.error('[GhostLayer] Email read failed:', error);
     return { success: false, error: error.message };
   }
 }

@@ -44,8 +44,6 @@ function getRandomEvent() {
   return events[Math.floor(Math.random() * events.length)];
 }
 
-
-// Comprehensive list of tracker domains to block across ALL websites
 const TRACKER_DOMAINS = [
   // === Analytics Trackers ===
   '*://*.google-analytics.com/*',
@@ -139,14 +137,9 @@ const TRACKER_DOMAINS = [
   '*://*/tracker*'
 ];
 
-// Setup tracker blocking using webRequest API
 export function setupTrackerBlocker() {
-  
-  // Block tracker requests
   chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
-      
-      // Increment tracker count asynchronously
       handleTrackerBlocked(1);
       
       return { cancel: true };

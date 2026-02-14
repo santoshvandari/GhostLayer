@@ -2,10 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   
-  // ============================================
-  // ELEMENTS
-  // ============================================
-  
   const generateEmailBtn = document.getElementById('generateEmailBtn');
   const emailDisplay = document.getElementById('emailDisplay');
   const emailValue = document.getElementById('emailValue');
@@ -33,10 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentEmail = null;
   let checkInboxInterval = null;
   
-  // ============================================
-  // HELPERS
-  // ============================================
-
   function createSvg(width, height, pathData, isLoader = false) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", width);
@@ -90,10 +82,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.appendChild(icon);
     btn.appendChild(document.createTextNode(' ' + text));
   }
-
-  // ============================================
-  // LOAD STATS
-  // ============================================
   
   async function loadStats() {
     try {
@@ -104,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         animateNumber(dataPoisonedEl, response.stats.dataPoisoned);
       }
     } catch (error) {
-      console.error('[GhostLayer] Failed to load stats:', error);
+      // Failed to load stats
     }
   }
   
@@ -131,23 +119,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, stepDuration);
   }
   
-  // ============================================
-  // LOAD SETTINGS
-  // ============================================
-  
   async function loadSettings() {
     try {
       const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning']);
       fingerprintToggle.checked = settings.fingerprintSpoofing !== false;
       dataPoisoningToggle.checked = settings.dataPoisoning !== false;
     } catch (error) {
-      console.error('[GhostLayer] Failed to load settings:', error);
+      // Failed to load settings
     }
   }
-  
-  // ============================================
-  // LOAD EMAIL HISTORY
-  // ============================================
   
   async function loadEmailHistory() {
     try {
@@ -227,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         emailHistory.appendChild(div);
       });
     } catch (error) {
-      console.error('[GhostLayer] Failed to load history:', error);
+      // Failed to load history
     }
   }
   
@@ -238,10 +218,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     return `${Math.floor(seconds / 86400)}d ago`;
   }
-  
-  // ============================================
-  // GENERATE EMAIL
-  // ============================================
   
   generateEmailBtn.addEventListener('click', async () => {
     try {
@@ -299,10 +275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
   
-  // ============================================
-  // COPY EMAIL
-  // ============================================
-  
   copyEmailBtn.addEventListener('click', async () => {
     if (!currentEmail) return;
     try {
@@ -317,10 +289,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 2000);
     } catch (e) {}
   });
-  
-  // ============================================
-  // CHECK INBOX
-  // ============================================
   
   checkInboxBtn.addEventListener('click', async () => {
     if (!currentEmail) return;

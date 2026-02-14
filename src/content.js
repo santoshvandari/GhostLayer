@@ -2,33 +2,24 @@
 // Runs on every page to inject burner emails and block trackers
 
 
-// ============================================
-// 1. INJECT FINGERPRINT SPOOFING SCRIPT
-// ============================================
-
 (async function injectSpoofing() {
   try {
-    // Check if fingerprint spoofing is enabled
     const settings = await chrome.storage.local.get(['fingerprintSpoofing', 'dataPoisoning']);
     if (settings.fingerprintSpoofing === false) {
       return;
     }
     
-    // Get current profile and noise from background
     const response = await chrome.runtime.sendMessage({ action: 'getProfile' });
     const noiseResponse = await chrome.runtime.sendMessage({ action: 'getTelemetryNoise' });
     
     if (response && response.profile) {
-      // Pass the profile data via a document attribute to avoid CSP issues with script tags
       document.documentElement.setAttribute('data-ghostlayer-profile', JSON.stringify(response.profile));
       
       if (noiseResponse && noiseResponse.noise) {
         document.documentElement.setAttribute('data-ghostlayer-noise', JSON.stringify(noiseResponse.noise));
-        // Pass data poisoning setting
         document.documentElement.setAttribute('data-ghostlayer-poisoning-enabled', settings.dataPoisoning !== false ? 'true' : 'false');
       }
       
-      // Inject the main spoofing script
       const spoofingScript = document.createElement('script');
       spoofingScript.src = chrome.runtime.getURL('injected.js');
       
@@ -36,57 +27,9 @@
       
     }
   } catch (error) {
-    console.error('[GhostLayer] Failed to inject spoofing:', error);
+    // Silent fail - spoofing injection failed
   }
 })();
-
-// ============================================
-// 2. TRACKER DETECTION (for stats logging)
-// ============================================
-// Note: Actual blocking is done in background.js via webRequest API
-
-const TRACKER_PATTERNS = [
-  /google-analytics\.com/i,
-  /googletagmanager\.com/i,
-  /doubleclick\.net/i,
-  /facebook\.com\/tr/i,
-  /connect\.facebook\.net/i,
-  /analytics\.twitter\.com/i,
-  /bat\.bing\.com/i,
-  /hotjar\.com/i,
-  /mixpanel\.com/i,
-  /segment\.com/i,
-  /amplitude\.com/i,
-  /fullstory\.com/i
-];
-
-function detectTrackers() {
-  const scripts = document.querySelectorAll('script[src]');
-  let detectCount = 0;
-  
-  scripts.forEach(script => {
-    const src = script.getAttribute('src');
-    if (src && TRACKER_PATTERNS.some(pattern => pattern.test(src))) {
-      detectCount++;
-    }
-  });
-  
-  // Note: This is just for detection stats
-  // Actual blocking is handled by webRequest in background.js
-}
-
-// Run tracker detection on page load
-detectTrackers();
-
-const observer = new MutationObserver(detectTrackers);
-observer.observe(document.documentElement, {
-  childList: true,
-  subtree: true
-});
-
-// ============================================
-// 3. BURNER EMAIL INJECTION
-// ============================================
 
 let ghostEmailButton = null;
 let currentEmailField = null;
@@ -164,7 +107,6 @@ function createGhostButton() {
         }, 2000);
       }
     } catch (error) {
-      console.error('[GhostLayer] Email generation failed:', error);
       button.style.backgroundColor = '#ef4444';
       setTimeout(() => {
         button.style.backgroundColor = '#6366f1';
